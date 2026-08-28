@@ -69,6 +69,20 @@ flowchart LR
     POL -.-> R
 ```
 
+### The choices §4 leaves open
+
+| decision | choice | why |
+|---|---|---|
+| language, runtime | Python 3.11, Pydantic | the artifact is the centrepiece, and Pydantic gives typed models, load-time validation and JSON Schema from one definition |
+| model, and how the loop is structured | `claude-opus-5` with tool use; one action per turn, adaptive thinking | actions *are* tool calls, so every decision arrives structured and logged with no prose to parse. The model is shown a numbered list of controls and answers with a number; it never writes a locator |
+| computer-use technology | Playwright as transport, CDP accessibility tree for perception | the tree is what survives a surface with no clean DOM, and it is the vocabulary UIA and AX also speak. Playwright is a driver here, not an abstraction |
+| target application | a local console built for this: frameset, nested layout tables, ASP.NET control names, no test IDs, and a form with no accessible names at all | it lets the runtime conditions §3.3 names be injected on demand, which a public site will not do reliably. No terms, no rate limits, no real credentials or PII |
+| schema storage | Pydantic models serialised to JSON, one file per version | artifacts are reviewable documents: a change to a capability is a diff in code review |
+| determinism | ordered strategy chain, waits on conditions, asserted checkpoints | detailed in §3 |
+| architecture | one process, files on disk, no queue or database | there is no second consumer yet. FastAPI appears only inside the mock console, never in the system |
+
+The mock console is the one choice worth defending twice. Building the target myself means controlling both sides, which is a fair criticism. The mitigation is that it is harder than it needed to be in the way that matters: its sub-account form supplies two inputs with no accessible name, which is what forced targeting to become an ordered chain rather than a single locator.
+
 `Observation` is a value, not a live handle: a snapshot of roles, accessible names, the text beside unlabelled controls, and grids. Consequences: target resolution is testable exhaustively without a browser, and a new surface only has to produce an `Observation`.
 
 Perception is the accessibility tree, not the DOM. Actions invoke the node the tree returns rather than clicking a coordinate, which is what UIA's `InvokePattern` does and what removes scrolling and overlays as sources of flake. The cost is blindness to anything the tree omits; a canvas-rendered app needs a different `Surface`, not a change above it.
