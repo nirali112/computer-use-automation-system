@@ -26,7 +26,16 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+# Both the library and the target application are installed. mockbank is not
+# part of the system -- it is the console the system automates -- but it has to
+# be importable for `cua serve-mock` to work from any directory. Relying on the
+# repository root happening to be on sys.path worked under pytest, which puts it
+# there, and failed for the installed console script, which does not.
+where = ["src", "."]
+include = ["cua*", "mockbank*"]
+
+[tool.setuptools.package-data]
+mockbank = ["templates/*.html", "static/*.css"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
