@@ -85,7 +85,13 @@ The mock console is the one choice worth defending twice. Building the target my
 
 `Observation` is a value, not a live handle: a snapshot of roles, accessible names, the text beside unlabelled controls, and grids. Consequences: target resolution is testable exhaustively without a browser, and a new surface only has to produce an `Observation`.
 
-Actions invoke the node the accessibility tree returns rather than clicking a coordinate, which is what UIA's `InvokePattern` does and what removes scrolling and overlays as sources of flake. The cost is blindness to anything the tree omits; a canvas-rendered app needs a different `Surface`, not a change above it.
+Actions invoke the node the accessibility tree returns rather than clicking a coordinate, which is what UIA's `InvokePattern` does and what removes scrolling and overlays as sources of flake.
+
+Each of those decisions costs something, and the costs are worth stating rather than discovering:
+
+- **Perceiving through the accessibility tree** is blind to whatever the tree does not expose. A canvas-rendered application needs a different `Surface`, and a badly built page can be invisible to this system while being usable by a sighted operator.
+- **Observation as a snapshot** means a screen can change between observing and acting. Every action re-observes first, which costs a round trip per step and is why replay takes a second rather than a tenth of one.
+- **One process and files on disk** means no concurrent replays of the same capability and no history beyond the filesystem. It is the right size for one institution's tooling and the wrong size for a fleet, which is a migration rather than a redesign because both sit behind interfaces.
 
 ## 2. Artifact schema
 
@@ -129,6 +135,8 @@ flowchart TD
 `failure_signals` was added after running it: without a declared notion of application failure, an error page surfaced as a checkpoint timeout ten seconds later. Declared, it is reported in 731ms.
 
 Recovery is bounded twice: by each rule's attempt limit, and by refusing to re-authenticate once an irreversible step has run, since replaying would submit it twice.
+
+UI drift is secondary in this environment, because these applications change slowly, and the design treats it as a reporting problem rather than a recovery one. Every replay records which strategy resolved a target and at what confidence, so a capability that begins resolving through a lower-confidence fallback has visibly drifted before it fails outright. No new machinery detects this; it is already in the log. §4 describes how that signal is used across tenants. A drifted capability is never repaired automatically: it fails or it escalates, and a person decides.
 
 ## 4. Heterogeneity & multi-tenant
 
