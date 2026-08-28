@@ -8,38 +8,11 @@ empty name, and that acting through an accessibility node handle really does
 put text in the right field.
 """
 
-import socket
-import threading
-
 import pytest
-import uvicorn
 
 from cua.artifact import AdjacentCell, CellAdjacent, RoleName, TableCell, Target
 from cua.resolve import cast_value, extract_value, resolve_target
 from cua.surfaces.web import WebSurface
-from mockbank.app import app
-
-
-def _free_port() -> int:
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
-
-
-@pytest.fixture(scope="module")
-def base_url():
-    port = _free_port()
-    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error"))
-    thread = threading.Thread(target=server.run, daemon=True)
-    thread.start()
-    for _ in range(200):
-        if server.started:
-            break
-        threading.Event().wait(0.05)
-    assert server.started, "the mock application did not start"
-    yield f"http://127.0.0.1:{port}"
-    server.should_exit = True
-    thread.join(timeout=5)
 
 
 @pytest.fixture(scope="module")

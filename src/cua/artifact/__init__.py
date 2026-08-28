@@ -7,6 +7,7 @@ from .capability import (
     AdjacentCell,
     ControlText,
     Dismiss,
+    FailureSignal,
     Output,
     Parameter,
     Provenance,
@@ -23,7 +24,7 @@ from .targeting import CellAdjacent, Ordinal, RoleName, Target
 
 __all__ = [
     "SCHEMA_VERSION", "Capability", "Parameter", "Output", "Surface", "Provenance",
-    "BusinessOutcome", "Recovery", "Dismiss", "Retry", "Reauthenticate",
+    "BusinessOutcome", "Recovery", "FailureSignal", "Dismiss", "Retry", "Reauthenticate",
     "ControlText", "TableCell", "AdjacentCell",
     "Checkpoint", "Condition", "TextPresent", "TextAbsent", "ControlPresent",
     "Step", "Navigate", "Click", "TypeText", "SelectOption", "WaitFor",

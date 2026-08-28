@@ -151,6 +151,15 @@ class Output(BaseModel):
     type: ValueType
     description: str
     extract: Extraction
+    sensitive: bool = Field(
+        default=False,
+        description="Whether this value identifies a person. Sensitive "
+        "outputs are returned to the caller, who asked for them and is "
+        "entitled to them, but never written into an evidence log -- the "
+        "log has a far longer life and a much wider audience than the "
+        "response does. Marking it on the output is what lets the recorder "
+        "apply that rule without knowing anything about banking.",
+    )
     pattern: str | None = Field(
         default=None,
         description="Optional regular expression applied to the extracted "
@@ -190,6 +199,27 @@ class BusinessOutcome(BaseModel):
     )
 
 
+class FailureSignal(BaseModel):
+    """A condition meaning the application itself has failed.
+
+    The fourth and last declared category, and the one that stops the
+    taxonomy having a hole in it. A checkpoint says what success looks like,
+    a business outcome says what a legitimate other answer looks like, a
+    recovery says what a transient nuisance looks like -- and without this,
+    anything else at all resolves as "the expected state never arrived",
+    reported ten seconds later as a timeout.
+
+    That is a bad diagnosis twice over: it is slow, and it blames the wait
+    rather than naming the error page sitting on screen. Declaring the
+    signal turns it into an immediate, accurate failure that says the
+    application broke and this automation did not.
+    """
+
+    code: str
+    description: str
+    detect: Condition
+
+
 class Dismiss(BaseModel):
     """Clear a known interstitial by operating its own control."""
 
@@ -213,6 +243,16 @@ class Reauthenticate(BaseModel):
     """
 
     kind: Literal["reauthenticate"] = "reauthenticate"
+    restart_from: int = Field(
+        default=0,
+        ge=0,
+        description="The step the flow resumes at once the session is "
+        "re-established. Signing back on lands the console at its entry "
+        "point, so recovery generally means replaying from the start. The "
+        "engine refuses this if any irreversible step has already run: "
+        "replaying a submission would submit it twice, and a duplicated "
+        "transaction is far worse than a failed replay.",
+    )
 
 
 Remedy = Annotated[Union[Dismiss, Retry, Reauthenticate], Field(discriminator="kind")]
@@ -311,6 +351,11 @@ class Capability(BaseModel):
     checkpoint: Checkpoint = Field(description="Proves the goal was reached. Verified on every replay.")
     business_outcomes: list[BusinessOutcome] = Field(default_factory=list)
     recovery: list[Recovery] = Field(default_factory=list)
+    failure_signals: list[FailureSignal] = Field(
+        default_factory=list,
+        description="Conditions meaning the application itself failed. "
+        "Detected immediately rather than as an eventual checkpoint timeout.",
+    )
 
     provenance: Provenance
     approval: Literal["draft", "approved"] = Field(

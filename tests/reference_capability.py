@@ -18,6 +18,7 @@ from cua.artifact import (
     Click,
     Condition,
     Dismiss,
+    FailureSignal,
     LiteralValue,
     Navigate,
     Output,
@@ -130,6 +131,7 @@ def member_balance_capability() -> Capability:
                 type="string",
                 description="The member's full name as held on file.",
                 extract=AdjacentCell(label_text="Name"),
+                sensitive=True,
             ),
             Output(
                 name="savings_balance",
@@ -268,6 +270,19 @@ def member_balance_capability() -> Capability:
                     assertions=[TextPresent(text="Sign-on failed")],
                 ),
                 after_step=3,
+            ),
+        ],
+        failure_signals=[
+            FailureSignal(
+                code="CONSOLE_ERROR",
+                description=(
+                    "The console raised an unhandled application error. Nothing the "
+                    "automation did caused it and nothing it can do will clear it."
+                ),
+                detect=Condition(
+                    description="the console is showing an application error page",
+                    assertions=[TextPresent(text="Application Error")],
+                ),
             ),
         ],
         recovery=[

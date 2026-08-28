@@ -1,7 +1,7 @@
 """The surface seam, enforced rather than intended.
 
 The design claim this project rests on is that the artifact schema, the
-resolver and (from the next phase) the replay engine are independent of how
+resolver and the replay engine are independent of how
 any particular surface is driven -- which is what makes "this extends to a
 desktop application" a structural fact rather than an assertion in a design
 document.
@@ -25,6 +25,10 @@ SURFACE_INDEPENDENT_MODULES = [
     "cua.artifact.store",
     "cua.resolve",
     "cua.surfaces.base",
+    "cua.replay",
+    "cua.replay.engine",
+    "cua.replay.outcomes",
+    "cua.evidence.recorder",
 ]
 
 
