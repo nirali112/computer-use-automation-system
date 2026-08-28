@@ -81,7 +81,7 @@ flowchart LR
 | determinism | ordered strategy chain, waits on conditions, asserted checkpoints | detailed in §3 |
 | architecture | one process, files on disk, no queue or database | there is no second consumer yet. FastAPI appears only inside the mock console, never in the system |
 
-The mock console is the one choice worth defending twice. Building the target myself means controlling both sides, which is a fair criticism. The mitigation is that it is harder than it needed to be in the way that matters: its sub-account form supplies two inputs with no accessible name, which is what forced targeting to become an ordered chain rather than a single locator.
+Building the target myself means controlling both sides, which is a fair criticism. The mitigation is that it was made harder than it needed to be in the way that counts: its sub-account form supplies two inputs with no accessible name, which is what forced targeting to become an ordered chain rather than a single locator.
 
 `Observation` is a value, not a live handle: a snapshot of roles, accessible names, the text beside unlabelled controls, and grids. Consequences: target resolution is testable exhaustively without a browser, and a new surface only has to produce an `Observation`.
 
@@ -97,9 +97,7 @@ Each of those decisions costs something, and the costs are worth stating rather 
 
 A capability is a contract, not a recording: typed parameters and outputs, a checkpoint, business outcomes, recovery rules, failure signals. `as_tool_definition()` renders it as a callable tool whose description names the outcomes, so a calling agent knows `MEMBER_NOT_FOUND` is a possible answer before it calls. Steps bind parameter references, never values. That makes a recording reusable, and means no credential is stored in an artifact.
 
-A target is an ordered chain of strategies. The application forces this: its search field resolves by role and accessible name, while its sub-account form supplies two inputs with an *empty* accessible name, separable only by the adjacent table cell. Each strategy carries a rationale and a confidence, and replay reports which one resolved.
-
-Business outcomes are declared in the artifact, so "no such member is an answer" is versioned and reviewable instead of living in an exception handler.
+A target is an ordered chain of strategies, because the application forces it: its search field resolves by role and accessible name, while its sub-account form supplies two inputs with an *empty* one, separable only by the adjacent table cell. Each strategy carries a rationale and a confidence, and replay reports which resolved. Business outcomes are declared in the artifact, so "no such member is an answer" is versioned and reviewable instead of living in an exception handler.
 
 The schema rejects, at load time, a step binding an undeclared parameter, non-consecutive indices, duplicate outcome codes, and a sensitive parameter carrying an example value. The last rule came from a test: an example is documentation, documentation is committed, and a sample credential in a reviewed file is a leak.
 
@@ -150,7 +148,7 @@ UI drift is secondary in this environment, because these applications change slo
 
 **Multi-tenant.** A capability is recorded against a product, not a tenant, which is why `Surface` carries `application`, `tenant` and `variant_of`. The model is a shared base plus sparse per-tenant overrides, so a fix to the base propagates rather than being re-applied per institution. Two details are designed and not built: overrides must key on a stable step identifier rather than an index, because indices move when a base is re-recorded; and the number of overrides is itself a signal that a tenant should stop being a variant.
 
-**Drift** uses evidence the system already emits — which strategy resolved, at what confidence, how often recovery fired. A per-tenant canary replay compared against that profile catches a vendor upgrade before a real invocation does. Divergence opens a review; it never auto-repairs.
+**Drift**, per tenant, uses the signal §3 describes. A canary replay with known inputs, compared against that tenant's usual profile of resolved strategies and recovery rates, catches a vendor upgrade before a real invocation meets it.
 
 ## 5. Escalation & handoff
 
@@ -183,7 +181,7 @@ sequenceDiagram
 
 "Stuck" is any failure of an escalatable kind: an unresolvable control, a checkpoint that never held, a recovery out of attempts, an application error, a blocked step. A malformed argument is not escalatable, because no operator can fix it.
 
-The surface is wrapped so that acting without the token raises. Observing stays permitted, which is what allows an independent record. In run 12 the operator cleared an error page by hand and the log holds both their account and the automation's: *"controls appeared: button 'Search', textbox 'Member ID'"*. They can authorise the irreversible step as part of handing back, scoped to that invocation and recorded against their name.
+The surface is wrapped so that acting without the token raises, and observing stays permitted, which is what allows an independent record. In run 12 the operator cleared an error page by hand and the log holds both their account and the automation's: *"controls appeared: button 'Search', textbox 'Member ID'"*. They can authorise the irreversible step as part of handing back, scoped to that invocation and recorded against their name.
 
 The operator console is a CLI. A production one adds presentation and routing, and no part of the control-transfer model.
 
