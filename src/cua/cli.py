@@ -179,25 +179,48 @@ def serve_mock(args) -> int:
     return 0
 
 
+def _add_common(parser, *, after_verb: bool = False) -> None:
+    """Options accepted either side of the subcommand.
+
+    `cua --headed replay ...` and `cua replay ... --headed` should both work.
+    Nobody reading the second form thinks of it as a global option, and being
+    told to type it backwards is a bad answer.
+
+    Registering the same option twice needs care: argparse parses the
+    subcommand last, so a plain second registration would overwrite whatever
+    was given before the verb with the subparser's default. SUPPRESS stops the
+    subparser setting the attribute at all unless it was actually supplied, so
+    the earlier value survives and a later one still wins.
+    """
+    hidden = {"default": argparse.SUPPRESS} if after_verb else {}
+    parser.add_argument("--policy", help="the guardrail configuration to enforce",
+                        **({"default": DEFAULT_POLICY} if not after_verb else hidden))
+    parser.add_argument("--capabilities", help="directory of saved capability artifacts",
+                        **({"default": DEFAULT_CAPABILITIES} if not after_verb else hidden))
+    parser.add_argument("--evidence", help="where run output goes; the curated set under "
+                                           "evidence/ is produced by scripts/capture_evidence.py",
+                        **({"default": ".runs"} if not after_verb else hidden))
+    parser.add_argument("--interventions", help="directory the intervention queue lives in",
+                        **({"default": ".runs/interventions"} if not after_verb else hidden))
+    parser.add_argument("--headed", action="store_true", help="show the browser",
+                        **({"default": False} if not after_verb else hidden))
+
+
 def main(argv: list[str] | None = None) -> int:
     load_dotenv()
     parser = argparse.ArgumentParser(prog="cua", description=__doc__.split("\n")[0])
-    parser.add_argument("--policy", default=DEFAULT_POLICY)
-    parser.add_argument("--capabilities", default=DEFAULT_CAPABILITIES)
-    parser.add_argument("--evidence", default=".runs",
-                        help="where run output goes; the curated set under evidence/ is "
-                             "produced by scripts/capture_evidence.py")
-    parser.add_argument("--interventions", default=".runs/interventions")
-    parser.add_argument("--headed", action="store_true", help="show the browser")
+    _add_common(parser)
     commands = parser.add_subparsers(dest="command", required=True)
 
     d = commands.add_parser("discover", help="record a capability by driving the app with a model")
+    _add_common(d, after_verb=True)
     d.add_argument("goal_file")
     d.add_argument("--max-steps", type=int, default=40)
     d.add_argument("--run-id", default=None)
     d.set_defaults(handler=discover)
 
     r = commands.add_parser("replay", help="run a saved capability, without a model")
+    _add_common(r, after_verb=True)
     r.add_argument("capability_id")
     r.add_argument("--input", action="append", default=[], metavar="NAME=VALUE")
     r.add_argument("--run-id", default=None)
@@ -208,10 +231,12 @@ def main(argv: list[str] | None = None) -> int:
     r.set_defaults(handler=replay)
 
     c = commands.add_parser("catalog", help="the capabilities an agent could invoke")
+    _add_common(c, after_verb=True)
     c.add_argument("--tools", action="store_true", help="print them as tool definitions")
     c.set_defaults(handler=catalog)
 
     s = commands.add_parser("serve-mock", help="serve the mock core banking application")
+    _add_common(s, after_verb=True)
     s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8099)
     s.set_defaults(handler=serve_mock)
