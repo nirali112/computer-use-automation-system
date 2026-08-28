@@ -1,0 +1,7 @@
+13-replay-validation-error
+
+A deposit below the console's minimum. The form comes back with a validation message, which is the application telling the caller their request was wrong. Nothing was opened and nothing is broken, so it is reported as a business outcome with its own code and the caller can correct and retry.
+
+capability: open_member_subaccount v2 (approved)
+result: business_outcome
+business outcome DEPOSIT_REJECTED: The console rejected the opening deposit or the details supplied. The caller can correct the request and try again; nothing has been opened.

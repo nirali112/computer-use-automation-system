@@ -122,3 +122,14 @@ def test_faults_can_be_armed_for_several_renders(client):
     assert "Application Error" in client.get("/search").text
     assert "Application Error" in client.get("/search").text
     assert "Member Search" in client.get("/search").text
+
+
+def test_a_dialog_fault_is_not_spent_on_a_frame_that_cannot_show_one(client):
+    """The frameset and nav frame are chrome: they do not extend the page
+    shell, so they cannot raise a dialog. Consuming the fault while rendering
+    them spent it somewhere it could never fire, which is how an armed dialog
+    silently failed to appear in an evidence run."""
+    FAULTS.arm("js_confirm")
+    client.get("/")
+    client.get("/nav")
+    assert "confirm(" in client.get("/search").text

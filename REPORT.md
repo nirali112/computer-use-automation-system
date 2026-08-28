@@ -20,8 +20,12 @@ Two capabilities were recorded by `claude-opus-5` against a mock core banking co
 | irreversible step, no authorisation | escalated; operator authorised on the live session; `SUCCESS` |
 | unrecoverable error mid-flow | escalated; operator worked the same session by hand and said where to resume; `SUCCESS` |
 | restricted member | `BUSINESS_OUTCOME` · `SERVICING_NOT_PERMITTED` |
+| deposit below the minimum | `BUSINESS_OUTCOME` · `DEPOSIT_REJECTED` |
+| unexpected `confirm()` dialog | dismissed, recorded, `SUCCESS` |
 
-141 tests. Replay, escalation and the guardrails run with no API key and no network.
+142 tests. Replay, escalation and the guardrails run with no API key and no network.
+
+Those rows cover every runtime condition §3.3 names: a validation error, a "record not found" result, a permission denial, an unexpected dialog, a session timeout, and a failed load.
 
 Each of those replays also returns the member's name. It does not appear in the table, or in any evidence file, because it is declared a sensitive output: returned to the caller who asked for it, withheld from a log that outlives the request.
 

@@ -77,6 +77,12 @@ screenshot and a snapshot of what the automation could see.
 | `10-escalation-irreversible-authorised` | `success` — a person authorised the write, on the live session |
 | `11-replay-restricted-member` | `business_outcome` — a permission denial, reported not retried |
 | `12-escalation-operator-works-the-session` | `success` — a person drove the same session by hand, then handed it back |
+| `13-replay-validation-error` | `business_outcome` — a deposit below the minimum, reported not retried |
+| `14-replay-unexpected-dialog` | `success` — a `confirm()` nobody asked for, dismissed and recorded |
+
+Between them these cover every runtime condition the brief names in §3.3: a
+validation error (13), a "record not found" result (06), a permission denial
+(11), an unexpected dialog (14), a session timeout (09), and a failed load (08).
 
 ### The pair worth reading first
 

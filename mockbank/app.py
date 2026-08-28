@@ -64,8 +64,15 @@ PRODUCT_NAMES = {"SAV": "Regular Savings", "VAC": "Vacation Club", "HOL": "Holid
 # rendering helpers
 # --------------------------------------------------------------------------
 
+# The frameset and the navigation frame are chrome. They do not extend the
+# page shell, so they cannot raise a dialog, and consuming the fault while
+# rendering them would spend it somewhere it can never fire.
+CHROME_TEMPLATES = {"frameset.html", "nav.html"}
+
+
 def render(request: Request, template: str, **ctx) -> HTMLResponse:
-    ctx.setdefault("js_confirm", FAULTS.take("js_confirm"))
+    if template not in CHROME_TEMPLATES:
+        ctx.setdefault("js_confirm", FAULTS.take("js_confirm"))
     return templates.TemplateResponse(request, template, ctx)
 
 

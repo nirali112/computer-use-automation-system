@@ -1,0 +1,7 @@
+14-replay-unexpected-dialog
+
+The console raises a confirm() dialog nobody asked for. A modal blocks the page until it is answered, so there is no option to leave it and decide later; the standing policy is to dismiss, which is the Cancel button and the conservative answer. It is recorded in the log so an unexpected dialog is visible rather than an invisible influence on what followed. The run completes.
+
+capability: member_savings_balance v2 (approved)
+result: success
+success: returned 3 output(s): member_name, savings_account_number, savings_current_balance

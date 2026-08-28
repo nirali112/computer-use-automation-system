@@ -232,6 +232,25 @@ def main() -> int:
              "is nothing for an operator to resolve and nobody is called: it is reported to "
              "the caller as a business outcome.")
 
+    print("\nthe remaining runtime conditions section 3.3 names:\n")
+
+    run("13-replay-validation-error", subaccount,
+        {"member_id": "100234", "product": "Regular Savings", "opening_deposit": "5.00",
+         "nickname": "Too Small", **creds},
+        policy=with_irreversible, authorise=True,
+        note="A deposit below the console's minimum. The form comes back with a validation "
+             "message, which is the application telling the caller their request was wrong. "
+             "Nothing was opened and nothing is broken, so it is reported as a business "
+             "outcome with its own code and the caller can correct and retry.")
+
+    run("14-replay-unexpected-dialog", balance, {"member_id": "100234", **creds},
+        fault="js_confirm",
+        note="The console raises a confirm() dialog nobody asked for. A modal blocks the page "
+             "until it is answered, so there is no option to leave it and decide later; the "
+             "standing policy is to dismiss, which is the Cancel button and the conservative "
+             "answer. It is recorded in the log so an unexpected dialog is visible rather "
+             "than an invisible influence on what followed. The run completes.")
+
     print(f"\nwritten to {EVIDENCE}/\n")
     return 0
 
