@@ -81,7 +81,6 @@ class CellAdjacent(StrategyBase):
     role: str
     label_text: str
     match: Literal["exact", "contains"] = "exact"
-    direction: Literal["right", "below"] = "right"
 
 
 class Ordinal(StrategyBase):
