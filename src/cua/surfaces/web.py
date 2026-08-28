@@ -32,6 +32,8 @@ from __future__ import annotations
 
 import json
 import os
+import socket
+import urllib.request
 from typing import Any
 
 from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
@@ -88,13 +90,29 @@ _TABLES_JS = """
 """
 
 
+def _free_port() -> int:
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return probe.getsockname()[1]
+
+
 class WebSurface(Surface):
     """Drives a browser. The only surface implemented; the seam is the point."""
 
     def __init__(self, *, headless: bool = True, chromium_path: str | None = None) -> None:
         self._pw = sync_playwright().start()
         path = chromium_path or os.environ.get("CUA_CHROMIUM_PATH") or None
-        launch: dict[str, Any] = {"headless": headless, "args": ["--no-sandbox"]}
+        # The debugging port is what makes a human handoff possible at all. A
+        # person attaches to this port and drives the very session the
+        # automation was using -- the same tab, the same cookies, the same
+        # half-filled form. Starting a second browser for them would lose the
+        # signed-on session and the navigation history, which is most of what
+        # they need in order to help.
+        self._debug_port = _free_port()
+        launch: dict[str, Any] = {
+            "headless": headless,
+            "args": ["--no-sandbox", f"--remote-debugging-port={self._debug_port}"],
+        }
         if path:
             launch["executable_path"] = path
         self._browser: Browser = self._pw.chromium.launch(**launch)
@@ -107,6 +125,38 @@ class WebSurface(Surface):
         self._last_dialog: str | None = None
         self._accept_dialogs = False
         self._page.on("dialog", self._handle_dialog)
+
+    # -- handing the session to a person ------------------------------------
+
+    @property
+    def live_session_url(self) -> str | None:
+        """A URL an operator opens to drive this session themselves.
+
+        Chromium's own inspector, attached to the live tab. The operator sees
+        what the automation sees and acts in the same context; when they are
+        done, the automation resumes on whatever screen they left behind.
+        Returns None if the port is not answering, in which case the run
+        escalates with everything except the live link rather than failing.
+        """
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{self._debug_port}/json/list", timeout=2) as response:
+                targets = json.load(response)
+        except Exception:
+            return None
+        for target in targets:
+            if target.get("type") != "page":
+                continue
+            socket_url = target.get("webSocketDebuggerUrl", "")
+            if socket_url:
+                # Built against the inspector Chromium serves on the debugging
+                # port itself, rather than the hosted frontend it advertises.
+                # An operator on an institution's network should not need
+                # internet access to take over a stuck run.
+                return (
+                    f"http://127.0.0.1:{self._debug_port}/devtools/inspector.html"
+                    f"?ws={socket_url.split('//', 1)[-1]}"
+                )
+        return None
 
     # -- dialogs -----------------------------------------------------------
 

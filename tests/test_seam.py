@@ -29,6 +29,10 @@ SURFACE_INDEPENDENT_MODULES = [
     "cua.replay.engine",
     "cua.replay.outcomes",
     "cua.evidence.recorder",
+    "cua.safety",
+    "cua.escalation",
+    "cua.escalation.control",
+    "cua.escalation.broker",
 ]
 
 

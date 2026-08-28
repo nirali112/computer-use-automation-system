@@ -131,6 +131,12 @@ class ReplayResult:
 
     failure: Failure | None = None
     recoveries: list[Recovered] = field(default_factory=list)
+    interventions: list[str] = field(default_factory=list)
+    """Intervention requests raised during this run, whether or not anybody
+    answered them. A run that completed only because a person stepped in is
+    not the same as one that never needed help, and the difference belongs in
+    the result rather than only in the log."""
+
     evidence_dir: str | None = None
 
     @property
@@ -157,5 +163,6 @@ class ReplayResult:
         if self.status is Status.BUSINESS_OUTCOME:
             return f"business outcome {self.outcome_code}: {self.outcome_description}"
         if self.status is Status.ESCALATED:
-            return "escalated to a human operator"
+            raised = ", ".join(self.interventions) or "no request recorded"
+            return f"escalated to a human operator ({raised})"
         return f"failed: {self.failure.summary() if self.failure else 'no detail recorded'}"

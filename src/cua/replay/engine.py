@@ -51,12 +51,29 @@ from ..artifact.conditions import Condition
 from ..artifact.steps import Click, Navigate, ParamValue, SelectOption, Step, TypeText, WaitFor
 from ..evidence.recorder import Recorder
 from ..resolve import ExtractionError, cast_value, evaluate_condition, extract_value, resolve_target
+from ..escalation.broker import Escalator, Handback, Intervention
+from ..escalation.control import ControlledSurface, SessionControl, describe_change
 from ..safety.policy import Policy
 from ..surfaces.base import Observation, Surface
 from .outcomes import Failure, FailureKind, Recovered, ReplayResult, Status
 
 DEFAULT_STEP_TIMEOUT_MS = 10_000
 DEFAULT_POLL_MS = 200
+
+# Failures a person can actually do something about while standing at the
+# session. Deliberately not exhaustive: a malformed argument is the caller's
+# mistake and no amount of operator attention fixes it, and an unreadable
+# output means the flow already finished. Escalating those would train
+# operators to dismiss requests, which is how a working escalation path
+# quietly stops working.
+ESCALATABLE = frozenset({
+    FailureKind.TARGET_UNRESOLVED,
+    FailureKind.CHECKPOINT_FAILED,
+    FailureKind.RECOVERY_EXHAUSTED,
+    FailureKind.UNSAFE_TO_RECOVER,
+    FailureKind.APPLICATION_ERROR,
+    FailureKind.POLICY_BLOCKED,
+})
 
 
 class _Blocked(Exception):
@@ -86,10 +103,17 @@ class ReplayEngine:
         recorder: Recorder,
         policy: Policy,
         *,
+        escalator: Escalator | None = None,
+        control: SessionControl | None = None,
         step_timeout_ms: int = DEFAULT_STEP_TIMEOUT_MS,
         poll_ms: int = DEFAULT_POLL_MS,
     ) -> None:
-        self.surface = surface
+        self.control = control or SessionControl()
+        # Wrapped rather than trusted. While a human holds the session the
+        # engine is structurally incapable of acting on it, so no retry path
+        # can interfere with an operator mid-form by forgetting to check.
+        self.surface = ControlledSurface(surface, self.control)
+        self.escalator = escalator
         self.recorder = recorder
         # Required rather than optional. An engine constructed without a policy
         # would be an engine with no guardrail, and the one thing that must
@@ -354,6 +378,7 @@ class ReplayEngine:
         """
         started = time.monotonic()
         self._recoveries: list[Recovered] = []
+        self._interventions: list[str] = []
         completed = 0
 
         def finish(**kw) -> ReplayResult:
@@ -364,6 +389,7 @@ class ReplayEngine:
                 steps_completed=completed,
                 duration_ms=int((time.monotonic() - started) * 1000),
                 recoveries=list(self._recoveries),
+                interventions=list(self._interventions),
                 evidence_dir=str(self.recorder.directory),
                 **kw,
             )
@@ -402,75 +428,84 @@ class ReplayEngine:
 
         try:
             while pointer < len(capability.steps):
-                step = capability.steps[pointer]
-                self.recorder.event("step_started", step=step.index, intent=step.intent,
-                                    action=step.action.kind, risk=step.risk)
+                try:
+                    step = capability.steps[pointer]
+                    self.recorder.event("step_started", step=step.index, intent=step.intent,
+                                        action=step.action.kind, risk=step.risk)
 
-                # Before acting, see whether the application has already said
-                # something that changes what should happen -- an outcome, a
-                # nuisance to clear, or an error page.
-                if not skip_preflight:
-                    pre = self._look(capability, step.index, expect=None)
-                    if pre.reason == "app_failure":
-                        raise _Blocked(self._application_failure(step, pre.signal))
-                    if pre.reason == "outcome":
-                        return self._business(finish, pre.outcome, step.index)
-                    if pre.reason == "recovery":
-                        jump = self._recover(capability, pre.recovery, step, attempts,
-                                             executed_irreversible)
-                        if jump is not None:
-                            pointer, skip_preflight = jump, True
+                    # Before acting, see whether the application has already said
+                    # something that changes what should happen -- an outcome, a
+                    # nuisance to clear, or an error page.
+                    if not skip_preflight:
+                        pre = self._look(capability, step.index, expect=None)
+                        if pre.reason == "app_failure":
+                            raise _Blocked(self._application_failure(step, pre.signal))
+                        if pre.reason == "outcome":
+                            return self._business(finish, pre.outcome, step.index)
+                        if pre.reason == "recovery":
+                            jump = self._recover(capability, pre.recovery, step, attempts,
+                                                 executed_irreversible)
+                            if jump is not None:
+                                pointer, skip_preflight = jump, True
+                            continue
+                    skip_preflight = False
+
+                    verdict = self.policy.check_step(
+                        step, capability=capability, irreversible_authorised=authorise_irreversible)
+                    if not verdict:
+                        self.recorder.event("policy_blocked", step=step.index, intent=step.intent,
+                                            risk=step.risk, reason=verdict.reason)
+                        raise _Blocked(Failure(
+                            kind=FailureKind.POLICY_BLOCKED,
+                            step_index=step.index,
+                            intent=step.intent,
+                            expected="a step the guardrail permits",
+                            observed=verdict.reason,
+                        ))
+
+                    self._perform(capability, step, values)
+                    if step.risk == "irreversible":
+                        executed_irreversible = True
+
+                    # Wait for the step's expectation. A recovery here must not
+                    # re-run the action: the action already happened, and repeating
+                    # it would re-submit a form or click a control that is no longer
+                    # on screen. Clearing the obstruction and waiting again is the
+                    # whole of what recovery means at this point.
+                    jumped = False
+                    while True:
+                        settled = self._wait(capability, step.index, step.expect, self.step_timeout_ms)
+                        if settled.reason == "app_failure":
+                            raise _Blocked(self._application_failure(step, settled.signal))
+                        if settled.reason == "outcome":
+                            return self._business(finish, settled.outcome, step.index)
+                        if settled.reason == "recovery":
+                            jump = self._recover(capability, settled.recovery, step, attempts,
+                                                 executed_irreversible)
+                            if jump is not None:
+                                pointer, skip_preflight, jumped = jump, True, True
+                                break
+                            continue
+                        if settled.reason == "timeout":
+                            raise _Blocked(self._checkpoint_failure(step, step.expect, settled.observation))
+                        break
+
+                    if jumped:
                         continue
-                skip_preflight = False
 
-                verdict = self.policy.check_step(
-                    step, capability=capability, irreversible_authorised=authorise_irreversible)
-                if not verdict:
-                    self.recorder.event("policy_blocked", step=step.index, intent=step.intent,
-                                        risk=step.risk, reason=verdict.reason)
-                    raise _Blocked(Failure(
-                        kind=FailureKind.POLICY_BLOCKED,
-                        step_index=step.index,
-                        intent=step.intent,
-                        expected="a step the guardrail permits",
-                        observed=verdict.reason,
-                    ))
-
-                self._perform(capability, step, values)
-                if step.risk == "irreversible":
-                    executed_irreversible = True
-
-                # Wait for the step's expectation. A recovery here must not
-                # re-run the action: the action already happened, and repeating
-                # it would re-submit a form or click a control that is no longer
-                # on screen. Clearing the obstruction and waiting again is the
-                # whole of what recovery means at this point.
-                jumped = False
-                while True:
-                    settled = self._wait(capability, step.index, step.expect, self.step_timeout_ms)
-                    if settled.reason == "app_failure":
-                        raise _Blocked(self._application_failure(step, settled.signal))
-                    if settled.reason == "outcome":
-                        return self._business(finish, settled.outcome, step.index)
-                    if settled.reason == "recovery":
-                        jump = self._recover(capability, settled.recovery, step, attempts,
-                                             executed_irreversible)
-                        if jump is not None:
-                            pointer, skip_preflight, jumped = jump, True, True
-                            break
-                        continue
-                    if settled.reason == "timeout":
-                        raise _Blocked(self._checkpoint_failure(step, step.expect, settled.observation))
-                    break
-
-                if jumped:
+                    if step.expect is not None:
+                        self.recorder.event("checkpoint_verified", step=step.index,
+                                            condition=step.expect.description)
+                    completed += 1
+                    pointer += 1
+                except _Blocked as blocked:
+                    resumed = self._escalate(capability, blocked.failure, step)
+                    if resumed is None:
+                        raise
+                    pointer, granted = resumed
+                    authorise_irreversible = authorise_irreversible or granted
+                    skip_preflight = True
                     continue
-
-                if step.expect is not None:
-                    self.recorder.event("checkpoint_verified", step=step.index,
-                                        condition=step.expect.description)
-                completed += 1
-                pointer += 1
 
             # The goal is not assumed from having run out of steps.
             final = self._wait(capability, len(capability.steps), capability.checkpoint,
@@ -502,7 +537,80 @@ class ReplayEngine:
             # A failure is the one moment the richer evidence is worth its cost.
             self.recorder.screenshot(self.surface, f"failure-step-{failure.step_index}")
             self.recorder.snapshot(self.surface, f"failure-step-{failure.step_index}")
+            # A run that asked for help and did not get it is reported as
+            # escalated, not failed. The distinction matters to whoever reads
+            # the queue in the morning: one of these is waiting for a person.
+            if self._interventions:
+                return finish(status=Status.ESCALATED, failure=failure)
             return finish(status=Status.FAILED, failure=failure)
+
+    def _escalate(self, capability: Capability, failure: Failure, step: Step) -> tuple[int, bool] | None:
+        """Bring a human onto the live session, and pick up where they leave it.
+
+        The sequence is the whole of the control-transfer model:
+
+          1. capture what the automation could see, before anything moves
+          2. cede the token -- from here the engine cannot act, by construction
+          3. raise a request carrying the goal, the step, why it stopped, the
+             evidence, and a URL onto this very session
+          4. wait
+          5. observe what changed while somebody else was driving
+          6. reclaim the token and resume where the operator left the screen
+
+        Returns where to resume and whether the operator authorised the risky
+        step, or None if nobody came -- in which case the run ends escalated
+        with a complete request on file rather than pretending to have failed.
+        """
+        if self.escalator is None or failure.kind not in ESCALATABLE:
+            return None
+
+        before = self.surface.observe()
+        screenshot = self.recorder.screenshot(self.surface, f"escalation-step-{step.index}")
+        snapshot = self.recorder.snapshot(self.surface, f"escalation-step-{step.index}")
+
+        self.control.cede(f"{failure.kind.value} at step {step.index}")
+        intervention = Intervention.create(
+            run_id=self.recorder.run_id,
+            capability_id=capability.id,
+            capability_version=capability.version,
+            goal=capability.description,
+            step_index=step.index,
+            step_intent=step.intent,
+            reason=failure.observed,
+            failure_kind=failure.kind.value,
+            evidence_dir=str(self.recorder.directory),
+            live_session_url=self.surface.live_session_url,
+            screenshot=screenshot,
+            snapshot=snapshot,
+        )
+        self.recorder.event("escalation_raised", step=step.index, request=intervention.request_id,
+                            failure=failure.kind.value, reason=failure.observed,
+                            live_session=intervention.live_session_url is not None)
+
+        handback = self.escalator.escalate(intervention)
+
+        # Observing was permitted throughout, which is what makes an
+        # independent account of the operator's work possible at all.
+        change = describe_change(before, self.surface.observe())
+        self.control.reclaim("operator handed back" if handback else "nobody answered")
+        self._interventions.append(intervention.request_id)
+
+        if handback is None:
+            self.recorder.event("escalation_unanswered", step=step.index,
+                                request=intervention.request_id, observed_change=change)
+            return None
+
+        handback.observed_change = change
+        self.recorder.event(
+            "escalation_resolved", step=step.index, request=intervention.request_id,
+            disposition=handback.disposition, operator=handback.operator,
+            note=handback.note, observed_change=change,
+            authorised_irreversible=handback.authorise_irreversible,
+        )
+        if handback.disposition != "resume":
+            return None
+        resume_at = step.index if handback.resume_from is None else handback.resume_from
+        return resume_at, handback.authorise_irreversible
 
     def _application_failure(self, step: Step, signal: FailureSignal) -> Failure:
         return Failure(

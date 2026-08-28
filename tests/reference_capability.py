@@ -11,6 +11,7 @@ current savings balance.
 
 from cua.artifact import (
     AdjacentCell,
+    SelectOption,
     BusinessOutcome,
     Capability,
     Checkpoint,
@@ -334,6 +335,130 @@ def member_balance_capability() -> Capability:
                 "Authored by hand to exercise the schema and to give the replay "
                 "engine something correct to be tested against before any discovery "
                 "run exists."
+            ),
+        ),
+        approval="approved",
+    )
+
+
+def subaccount_capability() -> Capability:
+    """Open a sub-account for a member and reach the confirmation screen.
+
+    The second goal from the brief, and a deliberately different shape from
+    the first. It writes rather than reads, so its submission is marked
+    irreversible; it fills the unlabelled form, so most of its targets can
+    only resolve by adjacent cell; and it has two more ways to legitimately
+    not succeed -- a restricted member and a rejected deposit.
+    """
+    search_screen = Checkpoint(
+        description="the member search screen is displayed",
+        assertions=[TextPresent(text="Member Search")],
+    )
+    balance = member_balance_capability()
+
+    return Capability(
+        id="open_member_subaccount",
+        version=1,
+        name="Open a sub-account for a member",
+        description=(
+            "Signs on to the Meridian Core servicing console, opens a member's record, "
+            "submits a request for a new sub-account of the given product type with the "
+            "given opening deposit, and returns the confirmation details."
+        ),
+        surface=Surface(
+            kind="web", application="Meridian Core", application_version="8.2",
+            entry_point=f"{BASE_URL}/",
+        ),
+        parameters=[
+            Parameter(name="member_id", type="string", pattern=r"^\d{6}$",
+                      description="The member the sub-account is opened for.", example="100234"),
+            Parameter(name="product", type="string",
+                      description="Product type: Regular Savings, Vacation Club or Holiday Club.",
+                      example="Vacation Club"),
+            Parameter(name="opening_deposit", type="string",
+                      description="Opening deposit in dollars. The console enforces a minimum.",
+                      example="150.00"),
+            Parameter(name="nickname", type="string",
+                      description="The member's chosen name for the account.", example="Summer Trip"),
+            Parameter(name="operator_id", type="string", sensitive=True,
+                      description="Servicing operator to act as."),
+            Parameter(name="operator_password", type="string", sensitive=True,
+                      description="That operator's password."),
+        ],
+        outputs=[
+            Output(name="confirmation_number", type="string",
+                   description="The console's confirmation reference for the request.",
+                   extract=AdjacentCell(label_text="Confirmation Number")),
+            Output(name="account_number", type="string",
+                   description="The account number assigned to the new sub-account.",
+                   extract=AdjacentCell(label_text="New Account Number")),
+        ],
+        steps=[
+            *balance.steps[:8],
+            Step(index=8, intent="open the sub-account request form",
+                 action=Click(target=Target(
+                     description="the Open Sub-Account link",
+                     strategies=[RoleName(role="link", name="Open Sub-Account", confidence="high",
+                                          rationale="The link's own text is its accessible name.")])),
+                 expect=Checkpoint(description="the sub-account request form is displayed",
+                                   assertions=[TextPresent(text="Open Sub-Account")])),
+            Step(index=9, intent="choose the product type",
+                 action=SelectOption(
+                     target=_labelled("combobox", "Product Type", "the Product Type selector"),
+                     value=ParamValue(param="product"))),
+            Step(index=10, intent="enter the opening deposit",
+                 action=TypeText(target=_labelled("textbox", "Initial Deposit",
+                                                  "the Initial Deposit field"),
+                                 value=ParamValue(param="opening_deposit"))),
+            Step(index=11, intent="enter the account nickname",
+                 action=TypeText(target=_labelled("textbox", "Account Nickname",
+                                                  "the Account Nickname field"),
+                                 value=ParamValue(param="nickname"))),
+            Step(index=12,
+                 intent="submit the sub-account request",
+                 # The console opens the account on submission. Nothing in this
+                 # flow can close it again, so the step is marked for what it
+                 # is and the guardrail decides whether it may run.
+                 risk="irreversible",
+                 action=Click(target=Target(
+                     description="the Submit Request button",
+                     strategies=[RoleName(role="button", name="Submit Request", confidence="high",
+                                          rationale="A submit input's value becomes its accessible name.")]))),
+        ],
+        checkpoint=Checkpoint(
+            description="the console has confirmed the sub-account request",
+            assertions=[TextPresent(text="Sub-Account Request Confirmed"),
+                        TextPresent(text="Confirmation Number")],
+        ),
+        business_outcomes=[
+            *balance.business_outcomes,
+            BusinessOutcome(
+                code="SERVICING_NOT_PERMITTED",
+                description=("This member is flagged for restricted servicing and this operator "
+                             "may not open accounts for them. A decision the institution has "
+                             "made, not a malfunction."),
+                detect=Condition(description="the console refuses the request",
+                                 assertions=[TextPresent(text="not authorised")]),
+                after_step=8,
+            ),
+            BusinessOutcome(
+                code="DEPOSIT_REJECTED",
+                description="The console rejected the opening deposit or the details supplied.",
+                detect=Condition(description="the form reports a validation error",
+                                 assertions=[TextPresent(text="Initial Deposit must")]),
+                after_step=12,
+            ),
+        ],
+        failure_signals=balance.failure_signals,
+        recovery=[balance.recovery[0]],  # the interstitial only; see below
+        provenance=Provenance(
+            recorded_by="hand-written reference",
+            run_id="reference",
+            notes=(
+                "Re-authentication is deliberately not offered here. Restarting this "
+                "flow after its submission has run would open a second account, so the "
+                "only safe response to an expired session mid-write is to stop and ask "
+                "a person."
             ),
         ),
         approval="approved",
