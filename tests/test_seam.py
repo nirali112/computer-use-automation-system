@@ -16,6 +16,8 @@ that no browser came with them.
 import subprocess
 import sys
 
+import pytest
+
 SURFACE_INDEPENDENT_MODULES = [
     "cua.artifact",
     "cua.artifact.capability",
@@ -64,3 +66,37 @@ def test_the_surface_protocol_itself_is_browser_free():
     must be describable without the web implementation existing at all."""
     loaded = _imports_pulled_in_by("cua.surfaces.base")
     assert "cua.surfaces.web" not in loaded
+
+
+def test_a_second_surface_satisfies_the_protocol_without_changing_anything_above_it():
+    """The seam, checked rather than argued.
+
+    `DesktopSurface` is a documented stub, and that is the point: if it
+    provides the whole protocol, then a real desktop implementation needs to
+    change nothing in the artifact schema, the resolver, the replay engine or
+    the escalation model. If someone adds a method to `Surface` that only a
+    browser could satisfy, this fails.
+    """
+    from cua.surfaces.base import Surface
+    from cua.surfaces.desktop import DesktopSurface
+
+    required = {name for name in vars(Surface) if not name.startswith("_")}
+    provided = {name for name in dir(DesktopSurface) if not name.startswith("_")}
+    assert required <= provided, f"DesktopSurface is missing {sorted(required - provided)}"
+
+
+def test_the_desktop_stub_says_how_each_method_would_be_implemented():
+    """A stub that only raises is a TODO. One that names the platform API it
+    maps to is a description of the remaining work."""
+    from cua.surfaces.desktop import DesktopSurface
+
+    surface = DesktopSurface()
+    with pytest.raises(NotImplementedError, match="InvokePattern"):
+        surface.invoke(None)
+    with pytest.raises(NotImplementedError, match="TreeWalker"):
+        surface.observe()
+
+
+def test_the_desktop_stub_does_not_drag_in_a_browser_either():
+    loaded = _imports_pulled_in_by("cua.surfaces.desktop")
+    assert not {m for m in loaded if m.split(".")[0] in {"playwright", "selenium"}}

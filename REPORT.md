@@ -135,7 +135,7 @@ Recovery is bounded twice: by each rule's attempt limit, and by refusing to re-a
 `surfaces/base.py` is the intersection of what web accessibility trees and platform accessibility APIs both provide: role, name, value, contextual labels, grids, invoking a control. No selectors, XPath or DOM types appear in it or in anything consuming it.
 
 - **Legacy web**: the same implementation with worse names, which shifts targets onto the adjacent-cell strategy. Already exercised — the sub-account form has no accessible names at all.
-- **Desktop**: a new `Surface` mapping UIA or AX onto the same `Observation`. Artifact, resolver, replay and escalation are untouched.
+- **Desktop**: a new `Surface` mapping UIA or AX onto the same `Observation`. `surfaces/desktop.py` is a documented stub that names the platform call behind every method, and a test asserts it provides the whole protocol, so "nothing above changes" is checked rather than claimed. Three things genuinely differ and are written down there: frames become windows, `navigate` launches rather than fetches, and the handoff needs a real remote session instead of a debugging URL.
 - **Screenshot and coordinates**: needs a new member of the strategy union, since nothing in the schema is positional in pixel space. The schema accommodates it; it does not contain it.
 
 `tests/test_seam.py` imports the artifact schema, resolver and replay engine in a clean interpreter and fails if a browser comes with them. One convenience import during debugging would otherwise make the abstraction fiction while still passing review.
@@ -191,7 +191,7 @@ Three limits: pattern redaction recognises shapes, not meanings, so it will neve
 
 ## 7. Cuts
 
-- **Desktop and screenshot surfaces.** The `Surface` protocol is the deliverable, enforced by a test.
+- **Desktop and screenshot surfaces.** The protocol is the deliverable, and `surfaces/desktop.py` stubs it with the platform mapping for each method. Two tests hold the seam: one fails if the artifact or replay engine ever import a browser, the other if a method is added that only a browser could satisfy.
 - **Multi-tenant override resolution.** Designed above and present in the schema; no resolver written. Tenant plumbing before a second tenant exists is the infrastructure the brief warns against.
 - **Operator console.** A CLI, not co-browsing. The control transfer it drives is real.
 - **Outcome discovery.** Business outcomes, recovery and risk classification are added at review, because a run that succeeds cannot observe what happens otherwise. Runs 05 and 06 in `evidence/` show the difference this makes.
