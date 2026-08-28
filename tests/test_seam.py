@@ -33,6 +33,8 @@ SURFACE_INDEPENDENT_MODULES = [
     "cua.escalation",
     "cua.escalation.control",
     "cua.escalation.broker",
+    "cua.agent.synthesize",
+    "cua.agent.tools",
 ]
 
 

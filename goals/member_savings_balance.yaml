@@ -1,0 +1,36 @@
+# A goal to record. `cua discover goals/member_savings_balance.yaml`
+#
+# The inputs are the arguments a caller will supply on every future
+# invocation. Their values here are only what the discovery run types in
+# order to see the flow work once.
+#
+# Note that the operator's password is read from the environment rather than
+# written down. A goal file is committed; a credential must not be.
+
+id: member_savings_balance
+name: Read a member's current savings balance
+description: >-
+  Signs on to the Meridian Core servicing console, looks up a member by their
+  member ID, and returns the member's name and the current balance of their
+  savings account.
+application: Meridian Core
+entry_point: http://127.0.0.1:8099/
+
+goal: >-
+  Sign on to the servicing console, look up member 100234, open their record,
+  and read back the member's name and the current balance of their savings
+  account.
+
+inputs:
+  - name: member_id
+    value: "100234"
+    description: The member's identifier, as printed on their statement.
+    pattern: '^\d{6}$'
+  - name: operator_id
+    value_from_env: CUA_INPUT_OPERATOR_ID
+    description: Servicing operator to act as.
+    sensitive: true
+  - name: operator_password
+    value_from_env: CUA_INPUT_OPERATOR_PASSWORD
+    description: That operator's password.
+    sensitive: true
