@@ -39,6 +39,22 @@ def _surface(headless: bool = True):
     return WebSurface(headless=headless)
 
 
+def _hold_open(args, surface) -> None:
+    """Keep the browser on screen after a run, when somebody is watching.
+
+    A finished run closes its browser immediately, which is right for the
+    production path and useless for watching one. This waits for a keypress
+    instead, leaving the final screen up. Skipped when nothing is attached to
+    the terminal, so it can never hang a scripted or scheduled run.
+    """
+    if not getattr(args, "keep_open", False):
+        return
+    if not sys.stdin.isatty():
+        print("(--keep-open ignored: nothing attached to the terminal)")
+        return
+    input("\nbrowser left open on the final screen. press Enter to close it. ")
+
+
 def _read_inputs(spec: list[dict]) -> list:
     from .agent.synthesize import InputSpec
 
@@ -89,6 +105,7 @@ def discover(args) -> int:
 
         recorder.screenshot(surface, "discovery-final")
         recorder.snapshot(surface, "discovery-final")
+        _hold_open(args, surface)
         capability = synthesise(
             run, capability_id=request["id"], name=request["name"],
             description=request["description"], application=request["application"],
@@ -135,8 +152,10 @@ def replay(args) -> int:
 
     surface = _surface(headless=not args.headed)
     try:
-        engine = ReplayEngine(surface, recorder, policy, escalator=escalator)
+        engine = ReplayEngine(surface, recorder, policy, escalator=escalator,
+                              step_pause_ms=args.slow_mo)
         result = engine.run(capability, inputs, authorise_irreversible=args.authorise_irreversible)
+        _hold_open(args, surface)
     finally:
         surface.close()
 
@@ -179,6 +198,15 @@ def serve_mock(args) -> int:
     return 0
 
 
+def _add_watching(parser) -> None:
+    """Options that exist only so a person can follow what is happening."""
+    parser.add_argument("--slow-mo", type=int, default=0, metavar="MS",
+                        help="pause this many milliseconds between steps, so a headed run "
+                             "can be watched. 500 is a comfortable pace.")
+    parser.add_argument("--keep-open", action="store_true",
+                        help="leave the browser on the final screen until you press Enter")
+
+
 def _add_common(parser, *, after_verb: bool = False) -> None:
     """Options accepted either side of the subcommand.
 
@@ -216,6 +244,7 @@ def main(argv: list[str] | None = None) -> int:
     _add_common(d, after_verb=True)
     d.add_argument("goal_file")
     d.add_argument("--max-steps", type=int, default=40)
+    _add_watching(d)
     d.add_argument("--run-id", default=None)
     d.set_defaults(handler=discover)
 
@@ -226,6 +255,7 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--run-id", default=None)
     r.add_argument("--authorise-irreversible", action="store_true",
                    help="permit this invocation to take steps that cannot be undone")
+    _add_watching(r)
     r.add_argument("--escalation-timeout", type=float, default=0.0,
                    help="seconds to wait for an operator; 0 records the request and stops")
     r.set_defaults(handler=replay)

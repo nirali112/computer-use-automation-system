@@ -93,6 +93,16 @@ success: returned 3 output(s): member_name, savings_account_number, savings_curr
   savings_current_balance = 4182.55
 ```
 
+To watch it happen rather than read about it afterwards:
+
+```bash
+cua replay member_savings_balance --input member_id=100234 --headed --slow-mo 600 --keep-open
+```
+
+`--headed` shows the browser, `--slow-mo` pauses between steps (a replay is
+otherwise over in about a second, because nothing waits for a duration), and
+`--keep-open` leaves the final screen up until you press Enter.
+
 Then try a member the recording never saw — this is what parameterising the
 recording buys:
 

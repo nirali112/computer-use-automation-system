@@ -113,6 +113,7 @@ class ReplayEngine:
         control: SessionControl | None = None,
         step_timeout_ms: int = DEFAULT_STEP_TIMEOUT_MS,
         poll_ms: int = DEFAULT_POLL_MS,
+        step_pause_ms: int = 0,
     ) -> None:
         self.control = control or SessionControl()
         # Wrapped rather than trusted. While a human holds the session the
@@ -127,6 +128,12 @@ class ReplayEngine:
         self.policy = policy
         self.step_timeout_ms = step_timeout_ms
         self.poll_ms = poll_ms
+        # Purely for watching. Replay is fast because nothing waits for a
+        # duration -- every wait is for a condition -- so a run that takes a
+        # second is working as designed and is also impossible to follow. This
+        # inserts a deliberate pause between steps when a person is watching,
+        # and is zero everywhere else.
+        self.step_pause_ms = step_pause_ms
 
     # -- inputs ------------------------------------------------------------
 
@@ -503,6 +510,8 @@ class ReplayEngine:
                     if step.expect is not None:
                         self.recorder.event("checkpoint_verified", step=step.index,
                                             condition=step.expect.description)
+                    if self.step_pause_ms:
+                        time.sleep(self.step_pause_ms / 1000)
                     completed += 1
                     pointer += 1
                 except _Blocked as blocked:
