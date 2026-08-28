@@ -1,0 +1,30 @@
+[project]
+name = "cua"
+version = "0.1.0"
+description = "Record-once / replay-many computer-use automation for applications with no API"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.40",       # discovery-time LLM driver
+    "playwright>=1.47",      # web surface transport (a11y tree + CDP)
+    "pydantic>=2.8",         # artifact schema: typed, versioned, JSON-Schema-emitting
+    "python-dotenv>=1.0",    # local ANTHROPIC_API_KEY loading
+    "fastapi>=0.115",        # mockbank: the legacy target application
+    "uvicorn>=0.30",
+    "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24"]
+
+[project.scripts]
+cua = "cua.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
