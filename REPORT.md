@@ -1,6 +1,6 @@
 # Design write-up
 
-A model drives a real UI once to reach a goal. That run becomes a typed, versioned capability artifact. The artifact is then replayed with no model in the decision loop, under an explicit error taxonomy, an enforced allowlist, and a path for handing the live session to a person.
+A model drives a real UI once to reach a goal. That run becomes a typed, versioned capability artifact, replayed thereafter with no model in the decision loop, under an explicit error taxonomy, an enforced allowlist, and a path for handing the live session to a person.
 
 ## What was built, and what it does
 
@@ -85,15 +85,11 @@ The mock console is the one choice worth defending twice. Building the target my
 
 `Observation` is a value, not a live handle: a snapshot of roles, accessible names, the text beside unlabelled controls, and grids. Consequences: target resolution is testable exhaustively without a browser, and a new surface only has to produce an `Observation`.
 
-Perception is the accessibility tree, not the DOM. Actions invoke the node the tree returns rather than clicking a coordinate, which is what UIA's `InvokePattern` does and what removes scrolling and overlays as sources of flake. The cost is blindness to anything the tree omits; a canvas-rendered app needs a different `Surface`, not a change above it.
-
-One process, files on disk, no queue, no database.
+Actions invoke the node the accessibility tree returns rather than clicking a coordinate, which is what UIA's `InvokePattern` does and what removes scrolling and overlays as sources of flake. The cost is blindness to anything the tree omits; a canvas-rendered app needs a different `Surface`, not a change above it.
 
 ## 2. Artifact schema
 
-A capability is a contract, not a recording: typed parameters and outputs, a checkpoint, business outcomes, recovery rules, failure signals. `as_tool_definition()` renders it as a callable tool whose description names the outcomes, so a calling agent knows `MEMBER_NOT_FOUND` is a possible answer before it calls.
-
-Steps bind parameter references, never values. That makes a recording reusable, and means no credential is stored in an artifact.
+A capability is a contract, not a recording: typed parameters and outputs, a checkpoint, business outcomes, recovery rules, failure signals. `as_tool_definition()` renders it as a callable tool whose description names the outcomes, so a calling agent knows `MEMBER_NOT_FOUND` is a possible answer before it calls. Steps bind parameter references, never values. That makes a recording reusable, and means no credential is stored in an artifact.
 
 A target is an ordered chain of strategies. The application forces this: its search field resolves by role and accessible name, while its sub-account form supplies two inputs with an *empty* accessible name, separable only by the adjacent table cell. Each strategy carries a rationale and a confidence, and replay reports which one resolved.
 
@@ -150,7 +146,7 @@ Recovery is bounded twice: by each rule's attempt limit, and by refusing to re-a
 
 ## 5. Escalation & handoff
 
-The operator takes over the same live session, not a fresh one. A second browser would lose the signed-on session and the half-completed form. The browser runs with a debugging port and the request carries a URL onto that tab, served locally so no internet access is required.
+The operator takes over the same live session, not a fresh one: a second browser would lose the signed-on session and the half-completed form. The browser runs with a debugging port and the request carries a URL onto that tab, served locally so no internet access is required.
 
 ```mermaid
 sequenceDiagram
@@ -185,9 +181,7 @@ The operator console is a CLI. A production one adds presentation and routing, a
 
 ## 6. Safety
 
-The allowlist is a YAML file, readable by someone who is not an engineer, enforced at the action boundary on both execution paths. It controls origins and routes, since on a servicing console reading a member and administering the institution share a host.
-
-The discovery agent's tool surface is built from the policy, so a forbidden action is never offered. The execution check remains: a tool surface shapes what is likely, a guardrail handles what is possible.
+The allowlist is a YAML file, readable by someone who is not an engineer, enforced at the action boundary on both execution paths. It controls origins and routes, since on a servicing console reading a member and administering the institution share a host. The tool surface offered to the discovery agent is built from it, so a forbidden action is never offered; the execution check remains, because a tool surface shapes what is likely and a guardrail handles what is possible.
 
 Irreversible steps have three gates — policy permits, capability approved, caller authorises per invocation (or a named operator does, on the live session). Three because the costs are asymmetric: a blocked transfer is resolved in minutes, an unintended one is money that has moved.
 
