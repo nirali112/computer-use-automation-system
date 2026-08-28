@@ -266,3 +266,25 @@ def test_a_callers_own_mistake_is_not_escalated_to_an_operator(tmp_path):
     assert result.status is Status.FAILED
     assert result.failure.kind is FailureKind.INVALID_INPUT
     assert operator.seen is None
+
+
+def test_a_step_is_not_escalated_twice(tmp_path):
+    """Bounded for the same reason recovery is.
+
+    An operator who authorises a step that a different gate then blocks would
+    otherwise be asked again, and again, with the run making no progress
+    between requests. The second refusal ends the run instead.
+    """
+    calls = []
+
+    class RepeatOperator:
+        def escalate(self, intervention):
+            calls.append(intervention.request_id)
+            # Resumes the same step, which will fail the same way.
+            return Handback(disposition="resume", operator="j.okafor", note="try again")
+
+    result = ReplayEngine(ScriptedSurface(screen("Nothing here")), Recorder("r", tmp_path), OPEN,
+                          escalator=RepeatOperator(), step_timeout_ms=200, poll_ms=50
+                          ).run(stuck_capability(), {})
+    assert len(calls) == 1, "the same step asked for a person more than once"
+    assert result.status is Status.ESCALATED

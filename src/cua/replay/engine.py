@@ -66,6 +66,12 @@ DEFAULT_POLL_MS = 200
 # output means the flow already finished. Escalating those would train
 # operators to dismiss requests, which is how a working escalation path
 # quietly stops working.
+# How many times one step may call for a person before the run stops asking.
+# Recovery is bounded and escalation has to be too: an operator who authorises
+# a step that is then blocked by a different gate would otherwise be asked
+# again, and again, with the run making no progress between requests.
+MAX_ESCALATIONS_PER_STEP = 1
+
 ESCALATABLE = frozenset({
     FailureKind.TARGET_UNRESOLVED,
     FailureKind.CHECKPOINT_FAILED,
@@ -379,6 +385,7 @@ class ReplayEngine:
         started = time.monotonic()
         self._recoveries: list[Recovered] = []
         self._interventions: list[str] = []
+        self._escalations_by_step: dict[int, int] = {}
         completed = 0
 
         def finish(**kw) -> ReplayResult:
@@ -563,6 +570,15 @@ class ReplayEngine:
         """
         if self.escalator is None or failure.kind not in ESCALATABLE:
             return None
+
+        asked = self._escalations_by_step.get(step.index, 0)
+        if asked >= MAX_ESCALATIONS_PER_STEP:
+            self.recorder.event("escalation_not_repeated", step=step.index,
+                                already_asked=asked, failure=failure.kind.value,
+                                reason="the step still cannot proceed after an operator "
+                                       "handed it back; asking again would not change that")
+            return None
+        self._escalations_by_step[step.index] = asked + 1
 
         before = self.surface.observe()
         screenshot = self.recorder.screenshot(self.surface, f"escalation-step-{step.index}")

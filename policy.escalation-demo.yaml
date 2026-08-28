@@ -1,0 +1,34 @@
+# The same guardrail as policy.yaml, with one difference: irreversible actions
+# are permitted here.
+#
+# It is a separate file rather than a flag because that is the shape of the
+# decision. Permitting an automation to take actions that cannot be undone is
+# a deliberate, reviewable change to an institution's configuration, not
+# something to be turned on for a run and forgotten.
+#
+# Two gates still stand after this one. The capability must be approved, and
+# the caller must authorise irreversible actions for that specific invocation
+# -- or a named operator must authorise them on the live session, which is
+# what the escalation demo shows.
+#
+#     cua --policy policy.escalation-demo.yaml replay open_member_subaccount ...
+
+allowed_origins:
+  - "http://127.0.0.1:8099"
+
+allowed_paths:
+  - "/"
+  - "/main"
+  - "/nav"
+  - "/login"
+  - "/search"
+  - "/member/*"
+
+allowed_actions:
+  - navigate
+  - click
+  - type
+  - select
+  - wait_for
+
+allow_irreversible: true

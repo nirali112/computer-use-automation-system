@@ -149,9 +149,9 @@ def main() -> int:
 
     print("\nhanding a stuck run to a person:\n")
 
-    # Irreversible actions are permitted by policy for this scenario, so the
+    # A separate, committed policy that permits irreversible actions, so the
     # remaining gate is the one only a person can pass.
-    with_irreversible = Policy.load("policy.yaml").model_copy(update={"allow_irreversible": True})
+    with_irreversible = Policy.load("policy.escalation-demo.yaml")
 
     class Operator:
         """Stands in for a person at the session. A production console would

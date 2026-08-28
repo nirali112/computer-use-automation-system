@@ -152,9 +152,41 @@ pytest                 # 140 tests, no key required
 
 The suite starts its own copy of the mock console and its own browser.
 
+## Seeing the handoff yourself
+
+Scenario 10 above runs the handoff with a stand-in operator. To be the operator:
+
+```bash
+# terminal 1 -- this will stop and wait for you for up to five minutes
+cua --policy policy.escalation-demo.yaml replay open_member_subaccount \
+    --input member_id=100234 --input product="Vacation Club" \
+    --input opening_deposit=150.00 --input nickname="Summer Trip" \
+    --escalation-timeout 300
+```
+
+It reaches the submission, refuses to take an irreversible step nobody
+authorised, and waits.
+
+```bash
+# terminal 2
+python -m cua.escalation.operator --queue .runs/interventions list
+python -m cua.escalation.operator --queue .runs/interventions show iv-...
+```
+
+`show` prints a URL. Open it: you are attached to **the browser the automation
+is using right now** — the same tab, still signed on, with the form filled in.
+Look around, then hand it back:
+
+```bash
+python -m cua.escalation.operator --queue .runs/interventions release iv-... \
+    --operator you --note "Checked against the member file." --authorise
+```
+
+Terminal 1 resumes and completes with a real confirmation number.
+
 ## Operator console
 
-When a run stops and asks for a person:
+The commands used above:
 
 ```bash
 python -m cua.escalation.operator --queue .runs/interventions list
