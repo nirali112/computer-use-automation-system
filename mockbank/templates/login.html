@@ -1,0 +1,19 @@
+{% extends "_shell.html" %}
+{% block title %}Sign On{% endblock %}
+{% block heading %}Meridian Core - Sign On{% endblock %}
+{% block content %}
+{% if error %}<p class="err">{{ error }}</p>{% endif %}
+<form method="post" action="/login">
+  <table class="formtbl">
+    <tr>
+      <td class="lbl"><label for="ctl00_txtUser">Operator ID</label></td>
+      <td><input type="text" name="ctl00$txtUser" id="ctl00_txtUser" size="24"></td>
+    </tr>
+    <tr>
+      <td class="lbl"><label for="ctl00_txtPwd">Password</label></td>
+      <td><input type="password" name="ctl00$txtPwd" id="ctl00_txtPwd" size="24"></td>
+    </tr>
+    <tr><td></td><td><input type="submit" name="ctl00$btnSignOn" value="Sign On"></td></tr>
+  </table>
+</form>
+{% endblock %}

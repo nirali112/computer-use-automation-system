@@ -11,6 +11,7 @@ dependencies = [
     "fastapi>=0.115",        # mockbank: the legacy target application
     "uvicorn>=0.30",
     "jinja2>=3.1",
+    "python-multipart>=0.0.9",  # form parsing for the mock app's POST screens
 ]
 
 [project.optional-dependencies]

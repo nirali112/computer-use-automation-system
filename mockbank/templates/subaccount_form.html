@@ -1,0 +1,39 @@
+{% extends "_shell.html" %}
+{% block title %}Open Sub-Account{% endblock %}
+{% block heading %}Open Sub-Account - Member {{ member.member_id }}{% endblock %}
+{% block content %}
+{% if error %}<p class="err">{{ error }}</p>{% endif %}
+<!-- Unlike the search form, nothing here is labelled. The field's meaning is
+     carried only by the text in the adjacent table cell, which is how a great
+     deal of this software is actually built. Role plus accessible name is not
+     enough to identify these controls; something has to fall back to the
+     surrounding table structure. -->
+<form method="post" action="/member/{{ member.member_id }}/subaccount">
+  <table class="formtbl">
+    <tr>
+      <td class="lbl">Product Type</td>
+      <td>
+        <select name="ctl00$ContentPlaceHolder1$ddlProduct">
+          <option value="SAV">Regular Savings</option>
+          <option value="VAC">Vacation Club</option>
+          <option value="HOL">Holiday Club</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td class="lbl">Initial Deposit</td>
+      <td><input type="text" name="ctl00$ContentPlaceHolder1$txtDeposit" size="12"
+                 value="{{ deposit or '' }}"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Account Nickname</td>
+      <td><input type="text" name="ctl00$ContentPlaceHolder1$txtNickname" size="24"
+                 value="{{ nickname or '' }}"></td>
+    </tr>
+    <tr><td></td><td>
+      <input type="submit" name="ctl00$ContentPlaceHolder1$btnSubmit" value="Submit Request">
+    </td></tr>
+  </table>
+</form>
+<p><a href="/member/{{ member.member_id }}">Return to Member Detail</a></p>
+{% endblock %}

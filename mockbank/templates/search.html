@@ -1,0 +1,33 @@
+{% extends "_shell.html" %}
+{% block title %}Member Search{% endblock %}
+{% block heading %}Member Search{% endblock %}
+{% block content %}
+<!-- This form associates its labels properly, so role+accessible-name
+     resolution is sufficient to find the field. -->
+<form method="post" action="/search">
+  <table class="formtbl">
+    <tr>
+      <td class="lbl"><label for="ctl00_ContentPlaceHolder1_txtMemberId">Member ID</label></td>
+      <td><input type="text" name="ctl00$ContentPlaceHolder1$txtMemberId"
+                 id="ctl00_ContentPlaceHolder1_txtMemberId" size="16"
+                 value="{{ query or '' }}"></td>
+      <td><input type="submit" name="ctl00$ContentPlaceHolder1$btnSearch" value="Search"></td>
+    </tr>
+  </table>
+</form>
+{% if not_found %}
+  <p class="err">No record found for member ID {{ query }}.</p>
+{% endif %}
+{% if member %}
+  <div class="sectionbar">Search Results</div>
+  <table class="grid">
+    <tr><th>Member ID</th><th>Name</th><th>Branch</th><th></th></tr>
+    <tr>
+      <td>{{ member.member_id }}</td>
+      <td>{{ member.name }}</td>
+      <td>{{ member.branch }}</td>
+      <td><a href="/member/{{ member.member_id }}">Open</a></td>
+    </tr>
+  </table>
+{% endif %}
+{% endblock %}

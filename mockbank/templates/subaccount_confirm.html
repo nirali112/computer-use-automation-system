@@ -1,0 +1,16 @@
+{% extends "_shell.html" %}
+{% block title %}Request Confirmed{% endblock %}
+{% block heading %}Sub-Account Request Confirmed{% endblock %}
+{% block content %}
+<!-- The checkpoint the automation asserts against: a stable confirmation
+     heading plus the identifiers the caller needs handed back. -->
+<div class="sectionbar">Confirmation</div>
+<table class="formtbl">
+  <tr><td class="lbl">Confirmation Number</td><td>{{ confirmation }}</td></tr>
+  <tr><td class="lbl">New Account Number</td><td>{{ account_number }}</td></tr>
+  <tr><td class="lbl">Product</td><td>{{ product }}</td></tr>
+  <tr><td class="lbl">Opening Deposit</td><td>${{ '{:,.2f}'.format(deposit) }}</td></tr>
+  <tr><td class="lbl">Member</td><td>{{ member.member_id }}</td></tr>
+</table>
+<p><a href="/member/{{ member.member_id }}">Return to Member Detail</a></p>
+{% endblock %}

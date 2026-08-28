@@ -1,0 +1,11 @@
+{% extends "_shell.html" %}
+{% block title %}Notice{% endblock %}
+{% block heading %}System Notice{% endblock %}
+{% block content %}
+<!-- A known, dismissible interstitial: recoverable, not a failure. -->
+<p class="msg">Scheduled maintenance is planned for this weekend. Servicing
+functions remain available.</p>
+<form method="get" action="{{ continue_to }}">
+  <input type="submit" value="Continue">
+</form>
+{% endblock %}

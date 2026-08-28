@@ -1,0 +1,20 @@
+<html>
+<head><title>{% block title %}Meridian Core{% endblock %}</title>
+<link rel="stylesheet" href="/static/legacy.css">
+{% if js_confirm %}
+<!-- An unexpected confirmation dialog, of the kind these systems raise
+     without warning when a back-office policy changes. -->
+<script>window.onload = function () { confirm("Session advisory: activity on this account is being monitored. Continue?"); };</script>
+{% endif %}
+</head>
+<body>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr><td class="pagehead">{% block heading %}Meridian Core{% endblock %}</td></tr>
+  <tr><td>
+    <table width="100%" cellpadding="6" cellspacing="0"><tr><td>
+      {% block content %}{% endblock %}
+    </td></tr></table>
+  </td></tr>
+</table>
+</body>
+</html>

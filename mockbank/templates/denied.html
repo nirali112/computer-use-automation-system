@@ -1,0 +1,10 @@
+{% extends "_shell.html" %}
+{% block title %}Not Permitted{% endblock %}
+{% block heading %}Request Not Permitted{% endblock %}
+{% block content %}
+<!-- A permission denial is an answer, not a malfunction: the caller needs to
+     be told, and told specifically. -->
+<p class="err">Operator {{ operator }} is not authorised to open accounts for
+member {{ member_id }}. This member is flagged for restricted servicing.</p>
+<p><a href="/member/{{ member_id }}">Return to Member Detail</a></p>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "_shell.html" %}
+{% block title %}Member Detail{% endblock %}
+{% block heading %}Member Detail - {{ member.member_id }}{% endblock %}
+{% block content %}
+{% if message %}<p class="msg">{{ message }}</p>{% endif %}
+<div class="sectionbar">Member Information</div>
+<table class="formtbl">
+  <tr><td class="lbl">Name</td><td>{{ member.name }}</td>
+      <td class="lbl">Date of Birth</td><td>{{ member.dob }}</td></tr>
+  <tr><td class="lbl">SSN</td><td>***-**-{{ member.ssn_last4 }}</td>
+      <td class="lbl">Branch</td><td>{{ member.branch }}</td></tr>
+  <tr><td class="lbl">E-mail</td><td>{{ member.email }}</td>
+      <td class="lbl">Telephone</td><td>{{ member.phone }}</td></tr>
+</table>
+
+<div class="sectionbar">Accounts</div>
+<!-- The balance lives in a plain layout table with no identifiers of any
+     kind. Extraction has to be anchored on the row's own text. -->
+<table class="grid">
+  <tr><th>Account Number</th><th>Type</th><th>Status</th><th>Current Balance</th></tr>
+  {% for acct in member.accounts %}
+  <tr>
+    <td>{{ acct.number }}</td>
+    <td>{{ acct.kind }}</td>
+    <td>{{ acct.status }}</td>
+    <td>${{ '{:,.2f}'.format(acct.balance) }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p><a href="/member/{{ member.member_id }}/subaccount">Open Sub-Account</a></p>
+{% endblock %}

@@ -1,0 +1,18 @@
+/* Deliberately period-accurate styling for a server-rendered enterprise app.
+   No utility classes, no design system, no test hooks. */
+body { font-family: Verdana, Arial, sans-serif; font-size: 11px; background: #ffffff; margin: 0; }
+table { border-collapse: collapse; }
+.pagehead { background: #1f3a68; color: #ffffff; font-weight: bold; padding: 4px 6px; font-size: 12px; }
+.sectionbar { background: #dfe4ee; border-top: 1px solid #9aa8c0; border-bottom: 1px solid #9aa8c0;
+              font-weight: bold; padding: 3px 6px; }
+.formtbl td { padding: 3px 6px; vertical-align: middle; }
+.lbl { color: #333333; white-space: nowrap; }
+.grid { border: 1px solid #9aa8c0; margin: 4px 0; }
+.grid th { background: #eef1f7; border: 1px solid #c3ccdd; padding: 3px 8px; text-align: left; }
+.grid td { border: 1px solid #c3ccdd; padding: 3px 8px; }
+.err { color: #a40000; font-weight: bold; }
+.msg { color: #1f3a68; font-weight: bold; }
+.navlist { padding: 6px; }
+.navlist a { display: block; color: #1f3a68; padding: 2px 0; }
+input[type=text], input[type=password] { border: 1px solid #7f9db9; font-family: Verdana; font-size: 11px; }
+input[type=submit] { font-family: Verdana; font-size: 11px; padding: 1px 8px; }
