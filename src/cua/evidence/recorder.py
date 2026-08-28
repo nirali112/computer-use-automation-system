@@ -29,37 +29,32 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-REDACTED = "<redacted>"
+from ..safety.redact import REDACTED, Redactor
+
 DEFAULT_ROOT = Path("evidence/runs")
 
 
 class Recorder:
     """Writes one run's evidence directory."""
 
-    def __init__(self, run_id: str, root: Path | str = DEFAULT_ROOT, secrets: set[str] | None = None) -> None:
+    def __init__(
+        self,
+        run_id: str,
+        root: Path | str = DEFAULT_ROOT,
+        secrets: set[str] | None = None,
+        redactor: Redactor | None = None,
+    ) -> None:
         self.run_id = run_id
         self.directory = Path(root) / run_id
         self.directory.mkdir(parents=True, exist_ok=True)
         self._events = self.directory / "events.jsonl"
-        # Short strings are excluded deliberately: scrubbing every occurrence
-        # of a two-character password would corrupt the log into uselessness,
-        # and a secret that short is a different problem entirely.
-        self._secrets = {s for s in (secrets or set()) if len(s) >= 4}
+        self._redactor = redactor or Redactor(secrets)
         self._sequence = 0
 
     # -- redaction ---------------------------------------------------------
 
     def _scrub(self, value: Any) -> Any:
-        if isinstance(value, str):
-            for secret in self._secrets:
-                if secret in value:
-                    value = value.replace(secret, REDACTED)
-            return value
-        if isinstance(value, dict):
-            return {k: self._scrub(v) for k, v in value.items()}
-        if isinstance(value, (list, tuple)):
-            return [self._scrub(v) for v in value]
-        return value
+        return self._redactor.scrub_value(value)
 
     def add_secret(self, value: str) -> None:
         """Scrub this value from everything written from now on.
@@ -68,8 +63,7 @@ class Recorder:
         an extracted member name is not known when the recorder is created,
         but everything written after it is read must not contain it.
         """
-        if value and len(value) >= 4:
-            self._secrets.add(value)
+        self._redactor.add_secret(value)
 
     # -- events ------------------------------------------------------------
 

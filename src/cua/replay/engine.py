@@ -51,6 +51,7 @@ from ..artifact.conditions import Condition
 from ..artifact.steps import Click, Navigate, ParamValue, SelectOption, Step, TypeText, WaitFor
 from ..evidence.recorder import Recorder
 from ..resolve import ExtractionError, cast_value, evaluate_condition, extract_value, resolve_target
+from ..safety.policy import Policy
 from ..surfaces.base import Observation, Surface
 from .outcomes import Failure, FailureKind, Recovered, ReplayResult, Status
 
@@ -83,12 +84,17 @@ class ReplayEngine:
         self,
         surface: Surface,
         recorder: Recorder,
+        policy: Policy,
         *,
         step_timeout_ms: int = DEFAULT_STEP_TIMEOUT_MS,
         poll_ms: int = DEFAULT_POLL_MS,
     ) -> None:
         self.surface = surface
         self.recorder = recorder
+        # Required rather than optional. An engine constructed without a policy
+        # would be an engine with no guardrail, and the one thing that must
+        # never be reachable by forgetting an argument is that.
+        self.policy = policy
         self.step_timeout_ms = step_timeout_ms
         self.poll_ms = poll_ms
 
@@ -333,7 +339,19 @@ class ReplayEngine:
 
     # -- the run -----------------------------------------------------------
 
-    def run(self, capability: Capability, inputs: dict[str, Any]) -> ReplayResult:
+    def run(
+        self,
+        capability: Capability,
+        inputs: dict[str, Any],
+        *,
+        authorise_irreversible: bool = False,
+    ) -> ReplayResult:
+        """Execute a capability.
+
+        `authorise_irreversible` is per invocation rather than a stored
+        setting, so the decision to permit something that cannot be undone is
+        made by whoever is asking, at the moment of asking.
+        """
         started = time.monotonic()
         self._recoveries: list[Recovered] = []
         completed = 0
@@ -404,6 +422,19 @@ class ReplayEngine:
                             pointer, skip_preflight = jump, True
                         continue
                 skip_preflight = False
+
+                verdict = self.policy.check_step(
+                    step, capability=capability, irreversible_authorised=authorise_irreversible)
+                if not verdict:
+                    self.recorder.event("policy_blocked", step=step.index, intent=step.intent,
+                                        risk=step.risk, reason=verdict.reason)
+                    raise _Blocked(Failure(
+                        kind=FailureKind.POLICY_BLOCKED,
+                        step_index=step.index,
+                        intent=step.intent,
+                        expected="a step the guardrail permits",
+                        observed=verdict.reason,
+                    ))
 
                 self._perform(capability, step, values)
                 if step.risk == "irreversible":

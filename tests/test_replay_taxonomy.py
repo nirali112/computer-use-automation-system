@@ -34,6 +34,7 @@ from cua.artifact import (
 from cua.artifact.capability import BusinessOutcome, FailureSignal
 from cua.evidence import Recorder
 from cua.replay import FailureKind, ReplayEngine, Status
+from cua.safety import Policy, permissive_for_testing
 from cua.surfaces.base import Control, FrameView, Observation, Table
 
 
@@ -108,10 +109,13 @@ def capability(**overrides) -> Capability:
     return Capability(**base)
 
 
-def run(surface, cap, inputs=None, tmp_path=None, **engine_kw):
+OPEN = permissive_for_testing("http://x")
+
+
+def run(surface, cap, inputs=None, tmp_path=None, policy=OPEN, **run_kw):
     recorder = Recorder("probe", tmp_path or "/tmp/cua-taxonomy", secrets=set())
-    engine = ReplayEngine(surface, recorder, step_timeout_ms=300, poll_ms=50, **engine_kw)
-    return engine.run(cap, inputs or {})
+    engine = ReplayEngine(surface, recorder, policy, step_timeout_ms=300, poll_ms=50)
+    return engine.run(cap, inputs or {}, **run_kw)
 
 
 # -- success and business outcomes are both successful replays -------------
@@ -245,13 +249,14 @@ def test_reauthentication_is_refused_once_something_irreversible_has_run(tmp_pat
     transaction is far worse than a failed replay, so this refuses."""
     surface = ScriptedSurface(screen("session has expired", controls=[button("Submit Request")]))
     cap = capability(
+        approval="approved",
         steps=[Step(index=0, intent="submit the request", risk="irreversible",
                     action=Click(target=by_name("button", "Submit Request")))],
         recovery=[Recovery(
             name="reauthenticate", description="the session expired", max_attempts=2,
             detect=Condition(description="d", assertions=[TextPresent(text="session has expired")]),
             remedy=Reauthenticate(restart_from=0))])
-    result = run(surface, cap, tmp_path=tmp_path)
+    result = run(surface, cap, tmp_path=tmp_path, authorise_irreversible=True)
     assert result.failure.kind is FailureKind.UNSAFE_TO_RECOVER
     assert "second time" in result.failure.observed
 
@@ -295,7 +300,7 @@ def test_sensitive_arguments_are_named_but_never_written(tmp_path):
         Parameter(name="member_id", type="string", description="d"),
     ])
     recorder = Recorder("probe", tmp_path, secrets={"Passw0rd!"})
-    ReplayEngine(surface, recorder, step_timeout_ms=300, poll_ms=50).run(
+    ReplayEngine(surface, recorder, OPEN, step_timeout_ms=300, poll_ms=50).run(
         cap, {"operator": "Passw0rd!", "member_id": "100234"})
     written = (tmp_path / "probe" / "events.jsonl").read_text()
     assert "Passw0rd!" not in written
@@ -308,7 +313,7 @@ def test_a_sensitive_output_reaches_the_caller_but_not_the_log(tmp_path):
     cap = capability(outputs=[Output(name="member_name", type="string", description="d",
                                      sensitive=True, extract=AdjacentCell(label_text="Name"))])
     recorder = Recorder("probe", tmp_path, secrets=set())
-    result = ReplayEngine(surface, recorder, step_timeout_ms=300, poll_ms=50).run(cap, {})
+    result = ReplayEngine(surface, recorder, OPEN, step_timeout_ms=300, poll_ms=50).run(cap, {})
     assert result.outputs == {"member_name": "Dana Whitfield"}
     assert "Dana Whitfield" not in (tmp_path / "probe" / "events.jsonl").read_text()
     assert "Dana Whitfield" not in (tmp_path / "probe" / "result.json").read_text()

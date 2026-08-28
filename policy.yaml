@@ -1,0 +1,39 @@
+# What the automation is permitted to do.
+#
+# This file is the guardrail, and it is a file rather than code so that
+# somebody who is not an engineer can read it, review it and change it.
+# It is enforced on every action, on both execution paths -- the discovery
+# agent and deterministic replay alike.
+
+# Where the automation may act. Origin alone would be too coarse: on a
+# servicing console, reading a member and administering the institution
+# live on the same host, so routes are constrained as well.
+allowed_origins:
+  - "http://127.0.0.1:8099"
+
+allowed_paths:
+  - "/"
+  - "/main"
+  - "/nav"
+  - "/login"
+  - "/search"
+  - "/member/*"
+
+# What it may do. Also used to build the discovery agent's tool surface, so
+# the model is never offered an action it is not permitted to take.
+allowed_actions:
+  - navigate
+  - click
+  - type
+  - select
+  - wait_for
+
+# Whether steps marked irreversible may run at all.
+#
+# Off by default, and a caller must additionally authorise them per
+# invocation, and the capability must have been approved. Three gates for
+# one class of action, because the two failure modes are not symmetric: a
+# blocked transfer is an inconvenience resolved in minutes, an unintended
+# one is money that has moved against a real member's account and is
+# discovered later.
+allow_irreversible: false

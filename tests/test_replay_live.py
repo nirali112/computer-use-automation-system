@@ -13,6 +13,7 @@ import pytest
 
 from cua.evidence import Recorder
 from cua.replay import FailureKind, ReplayEngine, Status
+from cua.safety import permissive_for_testing
 from cua.surfaces.web import WebSurface
 from mockbank.faults import FAULTS
 from reference_capability import member_balance_capability
@@ -33,7 +34,8 @@ def replay(base_url, tmp_path):
         recorder = Recorder(label, tmp_path, secrets=set(CREDENTIALS.values()))
         surface = WebSurface()
         opened.append(surface)
-        engine = ReplayEngine(surface, recorder, step_timeout_ms=8_000)
+        engine = ReplayEngine(surface, recorder, permissive_for_testing(base_url),
+                              step_timeout_ms=8_000)
         return engine.run(capability, inputs), recorder
 
     yield go
