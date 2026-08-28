@@ -1,0 +1,48 @@
+# A goal to record. `cua discover goals/open_member_subaccount.yaml`
+#
+# Recorded second, and deliberately a different shape from the balance
+# lookup: this one writes, and its form supplies no accessible names at all,
+# so most of its controls can only be identified by the text beside them.
+#
+# Note that discovery runs against a non-production instance. A recording run
+# is exploratory by nature and nothing has yet classified which of its actions
+# cannot be undone -- that classification is an output of review, not an input
+# to discovery. See REPORT.md, Safety.
+
+id: open_member_subaccount
+name: Open a sub-account for a member
+description: >-
+  Signs on to the Meridian Core servicing console, opens a member's record,
+  submits a request for a new sub-account of the given product type with the
+  given opening deposit, and returns the confirmation details.
+application: Meridian Core
+entry_point: http://127.0.0.1:8099/
+
+goal: >-
+  Sign on to the servicing console, open member 100234's record, and open a new
+  sub-account for them: product type Vacation Club, an opening deposit of
+  150.00, and the nickname Summer Trip. Submit the request and read back the
+  confirmation number and the new account number from the confirmation screen.
+
+inputs:
+  - name: member_id
+    value: "100234"
+    description: The member the sub-account is opened for.
+    pattern: '^\d{6}$'
+  - name: product
+    value: Vacation Club
+    description: "Product type: Regular Savings, Vacation Club or Holiday Club."
+  - name: opening_deposit
+    value: "150.00"
+    description: Opening deposit in dollars. The console enforces a minimum.
+  - name: nickname
+    value: Summer Trip
+    description: The member's chosen name for the account.
+  - name: operator_id
+    value_from_env: CUA_INPUT_OPERATOR_ID
+    description: Servicing operator to act as.
+    sensitive: true
+  - name: operator_password
+    value_from_env: CUA_INPUT_OPERATOR_PASSWORD
+    description: That operator's password.
+    sensitive: true

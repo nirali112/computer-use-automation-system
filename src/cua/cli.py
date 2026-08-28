@@ -184,8 +184,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="cua", description=__doc__.split("\n")[0])
     parser.add_argument("--policy", default=DEFAULT_POLICY)
     parser.add_argument("--capabilities", default=DEFAULT_CAPABILITIES)
-    parser.add_argument("--evidence", default="evidence/runs")
-    parser.add_argument("--interventions", default="evidence/interventions")
+    parser.add_argument("--evidence", default=".runs",
+                        help="where run output goes; the curated set under evidence/ is "
+                             "produced by scripts/capture_evidence.py")
+    parser.add_argument("--interventions", default=".runs/interventions")
     parser.add_argument("--headed", action="store_true", help="show the browser")
     commands = parser.add_subparsers(dest="command", required=True)
 

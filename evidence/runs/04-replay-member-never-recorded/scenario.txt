@@ -1,0 +1,7 @@
+04-replay-member-never-recorded
+
+The same capability, invoked for a member the discovery run never saw. This is what parameterising the recording buys: the artifact describes the screen, not the one visit to it that produced it.
+
+capability: member_savings_balance v2 (approved)
+result: success
+success: returned 3 output(s): member_name, savings_account_number, savings_current_balance

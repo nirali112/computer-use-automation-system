@@ -1,0 +1,21 @@
+url: http://127.0.0.1:8099/
+title: Meridian Core - Servicing Console
+
+[frame (root)] http://127.0.0.1:8099/
+  (no controls)
+
+[frame navFrame] http://127.0.0.1:8099/nav
+  link       name='Member Search' labels=['Servicing'] ordinal=0
+  link       name='Account Servicing' labels=['Servicing'] ordinal=1
+  link       name='Sign Off' labels=['Servicing'] ordinal=2
+  table headers=[] rows=2
+
+[frame mainFrame] http://127.0.0.1:8099/member/100234/subaccount
+  link       name='Return to Member Detail' ordinal=0
+  combobox   name='' value='Vacation Club' labels=['Product Type'] ordinal=0
+  textbox    name='' value='150.00' labels=['Initial Deposit', 'Regular Savings\nVacation Club\nHoliday Club'] ordinal=0
+  textbox    name='' value='Summer Trip' labels=['Account Nickname'] ordinal=1
+  button     name='Submit Request' ordinal=0
+  table headers=[] rows=2
+  table headers=[] rows=1
+  table headers=[] rows=4

@@ -1,0 +1,9 @@
+05-replay-draft-unknown-member
+
+An unknown member, against the capability exactly as discovery produced it. The draft has no business outcomes declared -- a run that succeeds cannot observe what happens when things go otherwise -- so the flow fails, loudly and with a precise diagnosis, rather than quietly returning nothing. Compare with 06.
+
+capability: member_savings_balance v1 (draft)
+result: failed
+failed: target_unresolved at step 6 (Open member record): expected exactly one control matching "the 'Open' link"; observed could not resolve "the 'Open' link" in frame 'mainFrame':
+  role_name (high confidence): matched 0 — no control matched
+  cell_adjacent (medium confidence): matched 0 — no control matched

@@ -1,0 +1,7 @@
+07-replay-recovers-from-interstitial
+
+The console interposes a maintenance notice mid-flow. Replay recognises a declared, bounded recovery, clears it, and completes. The recovery is recorded on the result rather than becoming it.
+
+capability: member_savings_balance v2 (approved)
+result: success
+success: returned 3 output(s): member_name, savings_account_number, savings_current_balance

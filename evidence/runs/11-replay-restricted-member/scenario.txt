@@ -1,0 +1,7 @@
+11-replay-restricted-member
+
+A permission denial. The institution has already made this decision, so there is nothing for an operator to resolve and nobody is called: it is reported to the caller as a business outcome.
+
+capability: open_member_subaccount v2 (approved)
+result: business_outcome
+business outcome SERVICING_NOT_PERMITTED: This member is flagged for restricted servicing and this operator may not open accounts for them. A decision the institution has already made, which the caller needs to hear rather than have retried.

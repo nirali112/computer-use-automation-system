@@ -1,0 +1,15 @@
+{
+  "status": "business_outcome",
+  "capability_id": "member_savings_balance",
+  "capability_version": 2,
+  "run_id": "06-replay-reviewed-unknown-member",
+  "steps_completed": 5,
+  "duration_ms": 811,
+  "outputs": null,
+  "outcome_code": "MEMBER_NOT_FOUND",
+  "outcome_description": "No member exists with the supplied ID. A legitimate answer the caller needs in order to act, not a failure of the automation.",
+  "failure": null,
+  "recoveries": [],
+  "interventions": [],
+  "evidence_dir": "evidence/runs/06-replay-reviewed-unknown-member"
+}

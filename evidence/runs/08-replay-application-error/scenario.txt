@@ -1,0 +1,7 @@
+08-replay-application-error
+
+The console falls over. Reported immediately as an application error rather than waited out and reported as a timeout, because the capability declares what its error page looks like. The distinction matters: this failure is not the automation's fault, and the report says so.
+
+capability: member_savings_balance v2 (approved)
+result: failed
+failed: application_error at step 3 (Sign on): expected the application to respond normally; observed CONSOLE_ERROR: The console raised an unhandled application error. Nothing the automation did caused it and nothing it can do will clear it.

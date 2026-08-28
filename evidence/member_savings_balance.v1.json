@@ -1,0 +1,273 @@
+{
+  "schema_version": "1.0",
+  "id": "member_savings_balance",
+  "version": 1,
+  "name": "Read a member's current savings balance",
+  "description": "Signs on to the Meridian Core servicing console, looks up a member by their member ID, and returns the member's name and the current balance of their savings account.",
+  "surface": {
+    "kind": "web",
+    "application": "Meridian Core",
+    "entry_point": "http://127.0.0.1:8099/"
+  },
+  "parameters": [
+    {
+      "name": "member_id",
+      "type": "string",
+      "description": "The member's identifier, as printed on their statement.",
+      "required": true,
+      "sensitive": false,
+      "pattern": "^\\d{6}$",
+      "example": "100234"
+    },
+    {
+      "name": "operator_id",
+      "type": "string",
+      "description": "Servicing operator to act as.",
+      "required": true,
+      "sensitive": true
+    },
+    {
+      "name": "operator_password",
+      "type": "string",
+      "description": "That operator's password.",
+      "required": true,
+      "sensitive": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "member_name",
+      "type": "string",
+      "description": "Name on the member record for member 100234",
+      "extract": {
+        "kind": "adjacent_cell",
+        "frame": "mainFrame",
+        "label_text": "Name",
+        "direction": "right"
+      },
+      "sensitive": true
+    },
+    {
+      "name": "savings_account_number",
+      "type": "string",
+      "description": "Account number of the account with type Savings",
+      "extract": {
+        "kind": "table_cell",
+        "frame": "mainFrame",
+        "row_contains": "Savings",
+        "column_header": "Account Number"
+      },
+      "sensitive": true
+    },
+    {
+      "name": "savings_current_balance",
+      "type": "number",
+      "description": "Current balance of the Savings account SAV-100234-01",
+      "extract": {
+        "kind": "table_cell",
+        "frame": "mainFrame",
+        "row_contains": "Savings",
+        "column_header": "Current Balance"
+      },
+      "sensitive": true,
+      "pattern": "\\$([\\d,]+\\.\\d{2})"
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "intent": "open the application",
+      "action": {
+        "kind": "navigate",
+        "url": "http://127.0.0.1:8099/"
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 1,
+      "intent": "Enter operator ID",
+      "action": {
+        "kind": "type",
+        "target": {
+          "description": "the 'Operator ID' textbox",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Operator ID' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "textbox",
+              "name": "Operator ID",
+              "match": "exact"
+            }
+          ]
+        },
+        "value": {
+          "kind": "param",
+          "param": "operator_id"
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 2,
+      "intent": "Enter password",
+      "action": {
+        "kind": "type",
+        "target": {
+          "description": "the 'Password' textbox",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Password' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "textbox",
+              "name": "Password",
+              "match": "exact"
+            }
+          ]
+        },
+        "value": {
+          "kind": "param",
+          "param": "operator_password"
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 3,
+      "intent": "Sign on",
+      "action": {
+        "kind": "click",
+        "target": {
+          "description": "the 'Sign On' button",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Sign On' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "button",
+              "name": "Sign On",
+              "match": "exact"
+            }
+          ]
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 4,
+      "intent": "Enter member ID",
+      "action": {
+        "kind": "type",
+        "target": {
+          "description": "the 'Member ID' textbox",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Member ID' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "textbox",
+              "name": "Member ID",
+              "match": "exact"
+            }
+          ]
+        },
+        "value": {
+          "kind": "param",
+          "param": "member_id"
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 5,
+      "intent": "Search for member",
+      "action": {
+        "kind": "click",
+        "target": {
+          "description": "the 'Search' button",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Search' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "button",
+              "name": "Search",
+              "match": "exact"
+            }
+          ]
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 6,
+      "intent": "Open member record",
+      "action": {
+        "kind": "click",
+        "target": {
+          "description": "the 'Open' link",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Open' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "link",
+              "name": "Open",
+              "match": "exact"
+            },
+            {
+              "rationale": "This control is identified by the adjacent text 'Ballard' in the surrounding layout, which is how an operator reads the form. Used because the control may lose its name; it survives restyling and renaming of the underlying control, and breaks only if the form is restructured.",
+              "confidence": "medium",
+              "kind": "cell_adjacent",
+              "role": "link",
+              "label_text": "Ballard",
+              "match": "exact"
+            }
+          ]
+        }
+      },
+      "risk": "safe"
+    }
+  ],
+  "checkpoint": {
+    "description": "the application shows that the goal was reached: Sign on to the servicing console, look up member 100234, open their record, and read back the member's name and the current balance of their savings account.",
+    "assertions": [
+      {
+        "kind": "text_present",
+        "text": "Member Information",
+        "frame": "mainFrame",
+        "match": "contains"
+      },
+      {
+        "kind": "text_present",
+        "text": "Accounts",
+        "frame": "mainFrame",
+        "match": "contains"
+      },
+      {
+        "kind": "text_present",
+        "text": "Current Balance",
+        "frame": "mainFrame",
+        "match": "contains"
+      }
+    ]
+  },
+  "business_outcomes": [],
+  "recovery": [],
+  "failure_signals": [],
+  "provenance": {
+    "recorded_at": "2026-08-28T16:27:48.443218Z",
+    "recorded_by": "claude-opus-5",
+    "run_id": "discovery-balance",
+    "steps_taken": 7,
+    "notes": "Synthesised from a single successful discovery run. It records the path that worked and nothing else: business outcomes, recovery rules and failure signals describe what happens when things go otherwise and cannot be observed on a run that went right. They are added at review, which is what the draft state is for. Success phrases ['Member Detail - 100234'] were discarded because they contain values the caller supplies, so they describe this invocation rather than the screen."
+  },
+  "approval": "draft"
+}

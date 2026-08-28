@@ -1,0 +1,406 @@
+{
+  "schema_version": "1.0",
+  "id": "open_member_subaccount",
+  "version": 1,
+  "name": "Open a sub-account for a member",
+  "description": "Signs on to the Meridian Core servicing console, opens a member's record, submits a request for a new sub-account of the given product type with the given opening deposit, and returns the confirmation details.",
+  "surface": {
+    "kind": "web",
+    "application": "Meridian Core",
+    "entry_point": "http://127.0.0.1:8099/"
+  },
+  "parameters": [
+    {
+      "name": "member_id",
+      "type": "string",
+      "description": "The member the sub-account is opened for.",
+      "required": true,
+      "sensitive": false,
+      "pattern": "^\\d{6}$",
+      "example": "100234"
+    },
+    {
+      "name": "product",
+      "type": "string",
+      "description": "Product type: Regular Savings, Vacation Club or Holiday Club.",
+      "required": true,
+      "sensitive": false,
+      "example": "Vacation Club"
+    },
+    {
+      "name": "opening_deposit",
+      "type": "string",
+      "description": "Opening deposit in dollars. The console enforces a minimum.",
+      "required": true,
+      "sensitive": false,
+      "example": "150.00"
+    },
+    {
+      "name": "nickname",
+      "type": "string",
+      "description": "The member's chosen name for the account.",
+      "required": true,
+      "sensitive": false,
+      "example": "Summer Trip"
+    },
+    {
+      "name": "operator_id",
+      "type": "string",
+      "description": "Servicing operator to act as.",
+      "required": true,
+      "sensitive": true
+    },
+    {
+      "name": "operator_password",
+      "type": "string",
+      "description": "That operator's password.",
+      "required": true,
+      "sensitive": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "confirmation_number",
+      "type": "string",
+      "description": "Confirmation number shown on the confirmation screen",
+      "extract": {
+        "kind": "adjacent_cell",
+        "frame": "mainFrame",
+        "label_text": "Confirmation Number",
+        "direction": "right"
+      },
+      "sensitive": false
+    },
+    {
+      "name": "new_account_number",
+      "type": "string",
+      "description": "New sub-account number created for the member",
+      "extract": {
+        "kind": "adjacent_cell",
+        "frame": "mainFrame",
+        "label_text": "New Account Number",
+        "direction": "right"
+      },
+      "sensitive": true
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "intent": "open the application",
+      "action": {
+        "kind": "navigate",
+        "url": "http://127.0.0.1:8099/"
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 1,
+      "intent": "Enter operator ID",
+      "action": {
+        "kind": "type",
+        "target": {
+          "description": "the 'Operator ID' textbox",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Operator ID' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "textbox",
+              "name": "Operator ID",
+              "match": "exact"
+            }
+          ]
+        },
+        "value": {
+          "kind": "param",
+          "param": "operator_id"
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 2,
+      "intent": "Enter password",
+      "action": {
+        "kind": "type",
+        "target": {
+          "description": "the 'Password' textbox",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Password' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "textbox",
+              "name": "Password",
+              "match": "exact"
+            }
+          ]
+        },
+        "value": {
+          "kind": "param",
+          "param": "operator_password"
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 3,
+      "intent": "Sign on",
+      "action": {
+        "kind": "click",
+        "target": {
+          "description": "the 'Sign On' button",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Sign On' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "button",
+              "name": "Sign On",
+              "match": "exact"
+            }
+          ]
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 4,
+      "intent": "Enter member ID",
+      "action": {
+        "kind": "type",
+        "target": {
+          "description": "the 'Member ID' textbox",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Member ID' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "textbox",
+              "name": "Member ID",
+              "match": "exact"
+            }
+          ]
+        },
+        "value": {
+          "kind": "param",
+          "param": "member_id"
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 5,
+      "intent": "Search for member",
+      "action": {
+        "kind": "click",
+        "target": {
+          "description": "the 'Search' button",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Search' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "button",
+              "name": "Search",
+              "match": "exact"
+            }
+          ]
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 6,
+      "intent": "Open member record",
+      "action": {
+        "kind": "click",
+        "target": {
+          "description": "the 'Open' link",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Open' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "link",
+              "name": "Open",
+              "match": "exact"
+            },
+            {
+              "rationale": "This control is identified by the adjacent text 'Ballard' in the surrounding layout, which is how an operator reads the form. Used because the control may lose its name; it survives restyling and renaming of the underlying control, and breaks only if the form is restructured.",
+              "confidence": "medium",
+              "kind": "cell_adjacent",
+              "role": "link",
+              "label_text": "Ballard",
+              "match": "exact"
+            }
+          ]
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 7,
+      "intent": "Open the sub-account request form",
+      "action": {
+        "kind": "click",
+        "target": {
+          "description": "the 'Open Sub-Account' link",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Open Sub-Account' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "link",
+              "name": "Open Sub-Account",
+              "match": "exact"
+            }
+          ]
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 8,
+      "intent": "Set product type",
+      "action": {
+        "kind": "select",
+        "target": {
+          "description": "the 'Product Type' combobox",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "This control is identified by the adjacent text 'Product Type' in the surrounding layout, which is how an operator reads the form. Used because the control has no accessible name at all; it survives restyling and renaming of the underlying control, and breaks only if the form is restructured.",
+              "confidence": "medium",
+              "kind": "cell_adjacent",
+              "role": "combobox",
+              "label_text": "Product Type",
+              "match": "exact"
+            }
+          ]
+        },
+        "value": {
+          "kind": "param",
+          "param": "product"
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 9,
+      "intent": "Enter opening deposit",
+      "action": {
+        "kind": "type",
+        "target": {
+          "description": "the 'Initial Deposit' textbox",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "This control is identified by the adjacent text 'Initial Deposit' in the surrounding layout, which is how an operator reads the form. Used because the control has no accessible name at all; it survives restyling and renaming of the underlying control, and breaks only if the form is restructured.",
+              "confidence": "medium",
+              "kind": "cell_adjacent",
+              "role": "textbox",
+              "label_text": "Initial Deposit",
+              "match": "exact"
+            }
+          ]
+        },
+        "value": {
+          "kind": "param",
+          "param": "opening_deposit"
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 10,
+      "intent": "Enter nickname",
+      "action": {
+        "kind": "type",
+        "target": {
+          "description": "the 'Account Nickname' textbox",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "This control is identified by the adjacent text 'Account Nickname' in the surrounding layout, which is how an operator reads the form. Used because the control has no accessible name at all; it survives restyling and renaming of the underlying control, and breaks only if the form is restructured.",
+              "confidence": "medium",
+              "kind": "cell_adjacent",
+              "role": "textbox",
+              "label_text": "Account Nickname",
+              "match": "exact"
+            }
+          ]
+        },
+        "value": {
+          "kind": "param",
+          "param": "nickname"
+        }
+      },
+      "risk": "safe"
+    },
+    {
+      "index": 11,
+      "intent": "Submit the sub-account request",
+      "action": {
+        "kind": "click",
+        "target": {
+          "description": "the 'Submit Request' button",
+          "frame": "mainFrame",
+          "strategies": [
+            {
+              "rationale": "The browser computed the accessible name 'Submit Request' for this control, resolving whatever label, title or inner text supplies it. Role and name is the most durable identification available, and is the same primitive the platform accessibility APIs expose on native applications.",
+              "confidence": "high",
+              "kind": "role_name",
+              "role": "button",
+              "name": "Submit Request",
+              "match": "exact"
+            }
+          ]
+        }
+      },
+      "risk": "safe"
+    }
+  ],
+  "checkpoint": {
+    "description": "the application shows that the goal was reached: Sign on to the servicing console, open member 100234's record, and open a new sub-account for them: product type Vacation Club, an opening deposit of 150.00, and the nickname Summer Trip. Submit the request and read back the confirmation number and the new account number from the confirmation screen.",
+    "assertions": [
+      {
+        "kind": "text_present",
+        "text": "Sub-Account Request Confirmed",
+        "frame": "mainFrame",
+        "match": "contains"
+      },
+      {
+        "kind": "text_present",
+        "text": "Confirmation Number",
+        "frame": "mainFrame",
+        "match": "contains"
+      },
+      {
+        "kind": "text_present",
+        "text": "New Account Number",
+        "frame": "mainFrame",
+        "match": "contains"
+      }
+    ]
+  },
+  "business_outcomes": [],
+  "recovery": [],
+  "failure_signals": [],
+  "provenance": {
+    "recorded_at": "2026-08-28T16:48:17.423307Z",
+    "recorded_by": "claude-opus-5",
+    "run_id": "02-discovery-subaccount",
+    "steps_taken": 12,
+    "notes": "Synthesised from a single successful discovery run. It records the path that worked and nothing else: business outcomes, recovery rules and failure signals describe what happens when things go otherwise and cannot be observed on a run that went right. They are added at review, which is what the draft state is for."
+  },
+  "approval": "draft"
+}

@@ -1,0 +1,7 @@
+10-escalation-irreversible-authorised
+
+A write flow stops at its irreversible step because the caller did not authorise one. An intervention request is raised carrying a link into the session the automation was already using -- not a fresh one -- and the automation is structurally unable to act while the operator holds it. The operator authorises that single submission, hands back, and the run completes.
+
+capability: open_member_subaccount v2 (approved)
+result: success
+success: returned 2 output(s): confirmation_number, new_account_number

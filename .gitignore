@@ -19,6 +19,7 @@ node_modules/
 # OS
 .DS_Store
 
-# Local run output (evidence committed selectively, see /evidence)
-runs/
+# Ad-hoc run output. Curated evidence lives in /evidence and is committed;
+# everything else a local run produces goes here and is not.
+.runs/
 *.log

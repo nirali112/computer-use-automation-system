@@ -1,0 +1,7 @@
+09-replay-session-expiry
+
+The session expires mid-flow. This capability only reads, so re-authenticating and replaying from the start changes nothing -- which is what makes the recovery safe here and would not make it safe in a flow that writes.
+
+capability: member_savings_balance v2 (approved)
+result: success
+success: returned 3 output(s): member_name, savings_account_number, savings_current_balance

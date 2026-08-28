@@ -1,0 +1,7 @@
+06-replay-reviewed-unknown-member
+
+The same unknown member against the reviewed capability. Nothing about the automation changed between this run and 05. What changed is that a person declared what the console's answer means, so 'no such member' is now reported as a business outcome the caller can act on rather than as a failure.
+
+capability: member_savings_balance v2 (approved)
+result: business_outcome
+business outcome MEMBER_NOT_FOUND: No member exists with the supplied ID. A legitimate answer the caller needs in order to act, not a failure of the automation.

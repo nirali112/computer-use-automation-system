@@ -1,0 +1,7 @@
+03-replay-success
+
+The capability recorded by the discovery run, replayed with no model in the decision loop. Returns the outputs it declares.
+
+capability: member_savings_balance v2 (approved)
+result: success
+success: returned 3 output(s): member_name, savings_account_number, savings_current_balance
