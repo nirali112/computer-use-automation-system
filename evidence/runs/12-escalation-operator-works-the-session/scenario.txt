@@ -1,0 +1,7 @@
+12-escalation-operator-works-the-session
+
+The console throws an application error the capability cannot recover from. Rather than failing, the run raises an intervention and cedes the session. A person signs on by hand in that same browser and tells the run where to pick up. The automation watched without acting throughout, so the log records what actually changed alongside the operator's own account of it.
+
+capability: member_savings_balance v2 (approved)
+result: success
+success: returned 3 output(s): member_name, savings_account_number, savings_current_balance

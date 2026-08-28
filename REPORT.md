@@ -17,7 +17,8 @@ Two capabilities were recorded by `claude-opus-5` against a mock core banking co
 | unexpected interstitial injected | `SUCCESS`, one bounded recovery |
 | session expired mid-flow | `SUCCESS`, re-authenticated and replayed |
 | application error injected | `FAILED` · `APPLICATION_ERROR` in 731ms |
-| irreversible step, no authorisation | escalated, operator authorised on the live session, `SUCCESS` |
+| irreversible step, no authorisation | escalated; operator authorised on the live session; `SUCCESS` |
+| unrecoverable error mid-flow | escalated; operator worked the same session by hand and said where to resume; `SUCCESS` |
 | restricted member | `BUSINESS_OUTCOME` · `SERVICING_NOT_PERMITTED` |
 
 141 tests. Replay, escalation and the guardrails run with no API key and no network.
@@ -160,7 +161,7 @@ sequenceDiagram
 
 "Stuck" is any failure of an escalatable kind: an unresolvable control, a checkpoint that never held, a recovery out of attempts, an application error, a blocked step. A malformed argument is not escalatable, because no operator can fix it.
 
-The surface is wrapped so that acting without the token raises. Observing stays permitted, which is what allows an independent record: a handback carries the operator's decision, their own note, and separately what the automation watched change. They can authorise the irreversible step as part of handing back, scoped to that invocation and recorded against their name.
+The surface is wrapped so that acting without the token raises. Observing stays permitted, which is what allows an independent record. In run 12 the operator cleared an error page by hand and the log holds both their account and the automation's: *"controls appeared: button 'Search', textbox 'Member ID'"*. They can authorise the irreversible step as part of handing back, scoped to that invocation and recorded against their name.
 
 The operator console is a CLI. A production one adds presentation and routing, and no part of the control-transfer model.
 

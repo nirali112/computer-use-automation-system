@@ -1,26 +1,26 @@
-{"seq": 1, "at": "2026-08-28T17:43:42.033+00:00", "kind": "run_started", "capability": "member_savings_balance", "version": 2, "approval": "approved", "inputs": {"member_id": "100234", "operator_id": "<withheld>", "operator_password": "<withheld>"}}
-{"seq": 2, "at": "2026-08-28T17:43:42.033+00:00", "kind": "step_started", "step": 0, "intent": "open the application", "action": "navigate", "risk": "safe"}
-{"seq": 3, "at": "2026-08-28T17:43:42.137+00:00", "kind": "action_performed", "step": 0, "action": "navigate", "intent": "open the application"}
-{"seq": 4, "at": "2026-08-28T17:43:42.209+00:00", "kind": "step_started", "step": 1, "intent": "Enter operator ID", "action": "type", "risk": "safe"}
-{"seq": 5, "at": "2026-08-28T17:43:42.328+00:00", "kind": "target_resolved", "step": 1, "target": "the 'Operator ID' textbox", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
-{"seq": 6, "at": "2026-08-28T17:43:42.337+00:00", "kind": "action_performed", "step": 1, "action": "type", "intent": "Enter operator ID"}
-{"seq": 7, "at": "2026-08-28T17:43:42.378+00:00", "kind": "step_started", "step": 2, "intent": "Enter password", "action": "type", "risk": "safe"}
-{"seq": 8, "at": "2026-08-28T17:43:42.558+00:00", "kind": "target_resolved", "step": 2, "target": "the 'Password' textbox", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
-{"seq": 9, "at": "2026-08-28T17:43:42.566+00:00", "kind": "action_performed", "step": 2, "action": "type", "intent": "Enter password"}
-{"seq": 10, "at": "2026-08-28T17:43:42.611+00:00", "kind": "step_started", "step": 3, "intent": "Sign on", "action": "click", "risk": "safe"}
-{"seq": 11, "at": "2026-08-28T17:43:42.692+00:00", "kind": "target_resolved", "step": 3, "target": "the 'Sign On' button", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
-{"seq": 12, "at": "2026-08-28T17:43:42.697+00:00", "kind": "action_performed", "step": 3, "action": "click", "intent": "Sign on"}
-{"seq": 13, "at": "2026-08-28T17:43:42.748+00:00", "kind": "step_started", "step": 4, "intent": "Enter member ID", "action": "type", "risk": "safe"}
-{"seq": 14, "at": "2026-08-28T17:43:42.811+00:00", "kind": "target_resolved", "step": 4, "target": "the 'Member ID' textbox", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
-{"seq": 15, "at": "2026-08-28T17:43:42.817+00:00", "kind": "action_performed", "step": 4, "action": "type", "intent": "Enter member ID"}
-{"seq": 16, "at": "2026-08-28T17:43:42.856+00:00", "kind": "step_started", "step": 5, "intent": "Search for member", "action": "click", "risk": "safe"}
-{"seq": 17, "at": "2026-08-28T17:43:42.929+00:00", "kind": "target_resolved", "step": 5, "target": "the 'Search' button", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
-{"seq": 18, "at": "2026-08-28T17:43:42.934+00:00", "kind": "action_performed", "step": 5, "action": "click", "intent": "Search for member"}
-{"seq": 19, "at": "2026-08-28T17:43:42.994+00:00", "kind": "step_started", "step": 6, "intent": "Open member record", "action": "click", "risk": "safe"}
-{"seq": 20, "at": "2026-08-28T17:43:43.075+00:00", "kind": "target_resolved", "step": 6, "target": "the 'Open' link", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
-{"seq": 21, "at": "2026-08-28T17:43:43.081+00:00", "kind": "action_performed", "step": 6, "action": "click", "intent": "Open member record"}
-{"seq": 22, "at": "2026-08-28T17:43:43.186+00:00", "kind": "checkpoint_verified", "step": null, "condition": "the application shows that the goal was reached: Sign on to the servicing console, look up member 100234, open their record, and read back the member's name and the current balance of their savings account."}
-{"seq": 23, "at": "2026-08-28T17:43:43.186+00:00", "kind": "output_extracted", "name": "member_name", "type": "string", "value": null, "withheld": true}
-{"seq": 24, "at": "2026-08-28T17:43:43.186+00:00", "kind": "output_extracted", "name": "savings_account_number", "type": "string", "value": null, "withheld": true}
-{"seq": 25, "at": "2026-08-28T17:43:43.186+00:00", "kind": "output_extracted", "name": "savings_current_balance", "type": "number", "value": null, "withheld": true}
-{"seq": 26, "at": "2026-08-28T17:43:43.187+00:00", "kind": "run_finished", "status": "success", "summary": "success: returned 3 output(s): member_name, savings_account_number, savings_current_balance", "steps_completed": 7, "duration_ms": 1154}
+{"seq": 1, "at": "2026-08-28T23:30:31.750+00:00", "kind": "run_started", "capability": "member_savings_balance", "version": 2, "approval": "approved", "inputs": {"member_id": "100234", "operator_id": "<withheld>", "operator_password": "<withheld>"}}
+{"seq": 2, "at": "2026-08-28T23:30:31.750+00:00", "kind": "step_started", "step": 0, "intent": "open the application", "action": "navigate", "risk": "safe"}
+{"seq": 3, "at": "2026-08-28T23:30:31.832+00:00", "kind": "action_performed", "step": 0, "action": "navigate", "intent": "open the application"}
+{"seq": 4, "at": "2026-08-28T23:30:31.887+00:00", "kind": "step_started", "step": 1, "intent": "Enter operator ID", "action": "type", "risk": "safe"}
+{"seq": 5, "at": "2026-08-28T23:30:31.990+00:00", "kind": "target_resolved", "step": 1, "target": "the 'Operator ID' textbox", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
+{"seq": 6, "at": "2026-08-28T23:30:31.997+00:00", "kind": "action_performed", "step": 1, "action": "type", "intent": "Enter operator ID"}
+{"seq": 7, "at": "2026-08-28T23:30:32.036+00:00", "kind": "step_started", "step": 2, "intent": "Enter password", "action": "type", "risk": "safe"}
+{"seq": 8, "at": "2026-08-28T23:30:32.117+00:00", "kind": "target_resolved", "step": 2, "target": "the 'Password' textbox", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
+{"seq": 9, "at": "2026-08-28T23:30:32.122+00:00", "kind": "action_performed", "step": 2, "action": "type", "intent": "Enter password"}
+{"seq": 10, "at": "2026-08-28T23:30:32.160+00:00", "kind": "step_started", "step": 3, "intent": "Sign on", "action": "click", "risk": "safe"}
+{"seq": 11, "at": "2026-08-28T23:30:32.234+00:00", "kind": "target_resolved", "step": 3, "target": "the 'Sign On' button", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
+{"seq": 12, "at": "2026-08-28T23:30:32.238+00:00", "kind": "action_performed", "step": 3, "action": "click", "intent": "Sign on"}
+{"seq": 13, "at": "2026-08-28T23:30:32.287+00:00", "kind": "step_started", "step": 4, "intent": "Enter member ID", "action": "type", "risk": "safe"}
+{"seq": 14, "at": "2026-08-28T23:30:32.356+00:00", "kind": "target_resolved", "step": 4, "target": "the 'Member ID' textbox", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
+{"seq": 15, "at": "2026-08-28T23:30:32.361+00:00", "kind": "action_performed", "step": 4, "action": "type", "intent": "Enter member ID"}
+{"seq": 16, "at": "2026-08-28T23:30:32.393+00:00", "kind": "step_started", "step": 5, "intent": "Search for member", "action": "click", "risk": "safe"}
+{"seq": 17, "at": "2026-08-28T23:30:32.463+00:00", "kind": "target_resolved", "step": 5, "target": "the 'Search' button", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
+{"seq": 18, "at": "2026-08-28T23:30:32.467+00:00", "kind": "action_performed", "step": 5, "action": "click", "intent": "Search for member"}
+{"seq": 19, "at": "2026-08-28T23:30:32.524+00:00", "kind": "step_started", "step": 6, "intent": "Open member record", "action": "click", "risk": "safe"}
+{"seq": 20, "at": "2026-08-28T23:30:32.610+00:00", "kind": "target_resolved", "step": 6, "target": "the 'Open' link", "frame": "mainFrame", "strategy": "role_name", "confidence": "high", "attempts": [{"strategy": "role_name", "confidence": "high", "matched": 1, "note": "resolved"}]}
+{"seq": 21, "at": "2026-08-28T23:30:32.618+00:00", "kind": "action_performed", "step": 6, "action": "click", "intent": "Open member record"}
+{"seq": 22, "at": "2026-08-28T23:30:32.709+00:00", "kind": "checkpoint_verified", "step": null, "condition": "the application shows that the goal was reached: Sign on to the servicing console, look up member 100234, open their record, and read back the member's name and the current balance of their savings account."}
+{"seq": 23, "at": "2026-08-28T23:30:32.710+00:00", "kind": "output_extracted", "name": "member_name", "type": "string", "value": null, "withheld": true}
+{"seq": 24, "at": "2026-08-28T23:30:32.710+00:00", "kind": "output_extracted", "name": "savings_account_number", "type": "string", "value": null, "withheld": true}
+{"seq": 25, "at": "2026-08-28T23:30:32.710+00:00", "kind": "output_extracted", "name": "savings_current_balance", "type": "number", "value": null, "withheld": true}
+{"seq": 26, "at": "2026-08-28T23:30:32.710+00:00", "kind": "run_finished", "status": "success", "summary": "success: returned 3 output(s): member_name, savings_account_number, savings_current_balance", "steps_completed": 7, "duration_ms": 959}

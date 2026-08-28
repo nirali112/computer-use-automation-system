@@ -76,6 +76,7 @@ screenshot and a snapshot of what the automation could see.
 | `09-replay-session-expiry` | `success` — re-authenticated and replayed from the start |
 | `10-escalation-irreversible-authorised` | `success` — a person authorised the write, on the live session |
 | `11-replay-restricted-member` | `business_outcome` — a permission denial, reported not retried |
+| `12-escalation-operator-works-the-session` | `success` — a person drove the same session by hand, then handed it back |
 
 ### The pair worth reading first
 
@@ -116,6 +117,21 @@ submission, hands back, and the run completes with a real confirmation number.
 The `events.jsonl` for that run shows the full sequence: `escalation_raised`,
 then `escalation_resolved` carrying the operator's name, their own note, and
 separately what the automation observed changing while it watched.
+
+`12` is the other half of the same requirement. The console throws an error the
+capability cannot recover from, so the run cedes the session. A person clears it
+by hand in that same browser and says where to pick up. The automation watched
+without acting throughout, so the log carries both accounts:
+
+```
+note:            Console had thrown an error page. Reloaded the console past the
+                 error page; resume from the member search step.
+observed_change: the content of frame 'mainFrame' changed;
+                 controls appeared: button 'Search', textbox 'Member ID'
+```
+
+The second line is not the operator's word for what they did. It is what the
+automation saw while it was not allowed to act.
 
 ## What is not here
 

@@ -70,7 +70,7 @@ def arm(kind: str, count: int = 1) -> None:
 
 
 def run(label: str, capability, inputs, *, policy=None, escalator=None,
-        authorise=False, fault=None, note=""):
+        escalator_factory=None, authorise=False, fault=None, note=""):
     directory = EVIDENCE / label
     if directory.exists():
         shutil.rmtree(directory)
@@ -81,10 +81,13 @@ def run(label: str, capability, inputs, *, policy=None, escalator=None,
     recorder = Recorder(label, EVIDENCE, secrets=SECRETS)
     surface = WebSurface()
     try:
+        # A factory gets the live surface, so a stand-in operator can drive the
+        # same browser the engine is using -- which is what a real one does.
         engine = ReplayEngine(
             surface, recorder,
             policy or Policy.load("policy.yaml"),
-            escalator=escalator, control=control, step_timeout_ms=8_000)
+            escalator=escalator_factory(surface) if escalator_factory else escalator,
+            control=control, step_timeout_ms=8_000)
         result = engine.run(capability, inputs, authorise_irreversible=authorise)
     finally:
         surface.close()
@@ -176,6 +179,50 @@ def main() -> int:
              "session the automation was already using -- not a fresh one -- and the "
              "automation is structurally unable to act while the operator holds it. The "
              "operator authorises that single submission, hands back, and the run completes.")
+
+    class HandsOnOperator:
+        """An operator who does not merely approve, but works the session.
+
+        Run 10 shows an operator making a decision. This one shows the other
+        half of the requirement: the automation is stuck, a person drives the
+        very same browser to a state it can continue from, and says where to
+        pick up. The engine watches throughout without acting, so the record
+        of what they did does not depend on their own account of it.
+        """
+
+        def __init__(self, live):
+            self.live = live
+
+        def escalate(self, intervention):
+            print(f"    intervention {intervention.request_id}: {intervention.failure_kind} "
+                  f"at step {intervention.step_index} ({intervention.step_intent})")
+            # Standing at the session, the operator clears the error page by
+            # reloading the console, and signs on again if it dropped them.
+            self.live.navigate(f"http://127.0.0.1:{BASE_PORT}/")
+            main = self.live._page.frame(name="mainFrame")
+            if main is not None and "Operator ID" in (main.inner_text("body") or ""):
+                main.fill('input[name="ctl00$txtUser"]', CREDENTIALS["operator_id"])
+                main.fill('input[name="ctl00$txtPwd"]', CREDENTIALS["operator_password"])
+                main.click('input[value="Sign On"]')
+                self.live._page.wait_for_load_state("load")
+                did = "signed on again by hand"
+            else:
+                did = "reloaded the console past the error page"
+            print(f"    operator {did}, on the same session")
+            return Handback(
+                disposition="resume", operator="s.almeida",
+                note=f"Console had thrown an error page. {did.capitalize()}; "
+                     f"resume from the member search step.",
+                resume_from=4)
+
+    run("12-escalation-operator-works-the-session", balance,
+        {"member_id": "100234", **creds}, fault="app_error",
+        escalator_factory=HandsOnOperator,
+        note="The console throws an application error the capability cannot recover from. "
+             "Rather than failing, the run raises an intervention and cedes the session. A "
+             "person signs on by hand in that same browser and tells the run where to pick "
+             "up. The automation watched without acting throughout, so the log records what "
+             "actually changed alongside the operator's own account of it.")
 
     run("11-replay-restricted-member", subaccount,
         {"member_id": "100999", "product": "Regular Savings", "opening_deposit": "100.00",
