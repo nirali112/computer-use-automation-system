@@ -98,6 +98,31 @@ Each of those decisions costs something, and the costs are worth stating rather 
 
 ## 2. Artifact schema
 
+```
+Capability
+  schema_version     str                      refused, not coerced, if unrecognised
+  id, version        str, int                 one file per version, kept side by side
+  name, description  str                      what a reviewer and a calling agent read
+  surface            Surface                  kind, application, version, tenant, variant_of
+  parameters         list[Parameter]          name, type, required, pattern, sensitive
+  outputs            list[Output]             name, type, extraction, pattern, sensitive
+  steps              list[Step]               index, intent, action, risk, expect
+  checkpoint         Checkpoint               proves the goal was reached
+  business_outcomes  list[BusinessOutcome]    code, description, detector, after_step
+  recovery           list[Recovery]           detector, remedy, max_attempts
+  failure_signals    list[FailureSignal]      code, description, detector
+  provenance         Provenance               model, run_id, steps taken -- not the transcript
+  approval           draft | approved
+
+Step.action    Navigate | Click | TypeText | SelectOption | WaitFor
+Target         description, frame, strategies[]  -- tried in order, first unique match wins
+Strategy       RoleName | CellAdjacent | Ordinal -- each with rationale and confidence
+Extraction     ControlText | TableCell | AdjacentCell
+Remedy         Dismiss | Retry | Reauthenticate
+```
+
+Four lists describe what can happen, and the split between them is the schema's main idea. `checkpoint` is success. `business_outcomes` are the application's other legitimate answers. `recovery` is a nuisance replay may clear by itself. `failure_signals` are the application breaking. One detection mechanism serves all four; only the response differs.
+
 A capability is a contract, not a recording: typed parameters and outputs, a checkpoint, business outcomes, recovery rules, failure signals. `as_tool_definition()` renders it as a callable tool whose description names the outcomes, so a calling agent knows `MEMBER_NOT_FOUND` is a possible answer before it calls. Steps bind parameter references, never values. That makes a recording reusable, and means no credential is stored in an artifact.
 
 A target is an ordered chain of strategies, because the application forces it: its search field resolves by role and accessible name, while its sub-account form supplies two inputs with an *empty* one, separable only by the adjacent table cell. Each strategy carries a rationale and a confidence, and replay reports which resolved. Business outcomes are declared in the artifact, so "no such member is an answer" is versioned and reviewable instead of living in an exception handler.
