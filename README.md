@@ -29,7 +29,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 playwright install chromium
 
-cp .env.example .env      # then edit it
+cp .env.example .env
 ```
 
 `.env` holds three things:
@@ -60,10 +60,11 @@ test identifiers anywhere. Its sub-account form supplies no accessible names at
 all, which is the case that shapes most of the design.
 
 ```bash
-cua serve-mock                  # http://127.0.0.1:8099
+cua serve-mock
 ```
 
-Leave that running; the remaining commands need it.
+It serves on http://127.0.0.1:8099. Leave it running; the remaining commands
+need it.
 
 ### 2. Record a capability by driving the app with a model
 
@@ -113,8 +114,10 @@ cua replay member_savings_balance --input member_id=100781
 ### 4. Review the draft, then see the difference
 
 ```bash
-python scripts/review_balance_capability.py     # draft v1 -> approved v2
+python scripts/review_balance_capability.py
 ```
+
+That takes the draft `v1` to an approved `v2`.
 
 Now run the same unknown member against each version. The draft fails, loudly
 and with a precise diagnosis. The reviewed capability reports a business
@@ -136,9 +139,11 @@ business_outcome  MEMBER_NOT_FOUND
 python scripts/capture_evidence.py
 ```
 
-Eleven replays covering success, business outcomes, recovery from an injected
-interstitial and an expired session, an application error, a permission denial,
-and a human authorising an irreversible step on the live session. Writes
+Twelve replays covering success, a member the recording never saw, business
+outcomes (unknown member, permission denial, rejected deposit), recovery from
+an injected interstitial and an expired session, an application error, an
+unexpected dialog, and two handoffs — one where a person authorises an
+irreversible step and one where they work the live session by hand. Writes
 `evidence/runs/` and prints a summary.
 
 ### 6. What an agent would be handed
@@ -178,7 +183,7 @@ ruff check .
 mypy
 ```
 
-145 tests, no key required; the suite starts its own copy of the mock console
+146 tests, no key required; the suite starts its own copy of the mock console
 and its own browser. The type check and the linter are both clean, and both
 found real defects when first run — a list inferred from its first element
 could not have held the fallback targeting strategy, and an autofixed import
@@ -188,8 +193,9 @@ turned out to be a re-export in use.
 
 Scenario 10 above runs the handoff with a stand-in operator. To be the operator:
 
+In the first terminal — this stops and waits for you for up to five minutes:
+
 ```bash
-# terminal 1 -- this will stop and wait for you for up to five minutes
 cua --policy policy.escalation-demo.yaml replay open_member_subaccount \
     --input member_id=100234 --input product="Vacation Club" \
     --input opening_deposit=150.00 --input nickname="Summer Trip" \
@@ -199,8 +205,9 @@ cua --policy policy.escalation-demo.yaml replay open_member_subaccount \
 It reaches the submission, refuses to take an irreversible step nobody
 authorised, and waits.
 
+In a second terminal:
+
 ```bash
-# terminal 2
 python -m cua.escalation.operator --queue .runs/interventions list
 python -m cua.escalation.operator --queue .runs/interventions show iv-...
 ```
@@ -239,12 +246,16 @@ form. Not a fresh one.
 mockbank/           the target: a mock core banking servicing console
 goals/              goals to record, with their typed inputs
 capabilities/       saved artifacts, one file per version
+evidence/           committed runs: two discovery, twelve replay
 policy.yaml         the guardrail: where the automation may act, and what it may do
-scripts/            the review step, and the evidence capture
+policy.escalation-demo.yaml
+                    the same, permitting irreversible actions, for the handoff demo
+scripts/            the review step, the evidence capture, the agent invocation
 
 src/cua/
-  surfaces/         THE SEAM. base.py is the interface a desktop surface would
-                    also satisfy; web.py is the only implementation
+  surfaces/         THE SEAM. base.py is the interface; web.py implements it
+                    against a browser; desktop.py is a documented stub naming
+                    the UIA and AX call behind every method
   artifact/         the capability schema: typed, versioned, self-validating
   resolve.py        target resolution, checkpoints and extraction, as pure
                     functions over an observation -- no browser
