@@ -20,7 +20,6 @@ from cua.artifact import (
     Condition,
     Dismiss,
     FailureSignal,
-    LiteralValue,
     Navigate,
     Output,
     Parameter,
@@ -350,10 +349,6 @@ def subaccount_capability() -> Capability:
     only resolve by adjacent cell; and it has two more ways to legitimately
     not succeed -- a restricted member and a rejected deposit.
     """
-    search_screen = Checkpoint(
-        description="the member search screen is displayed",
-        assertions=[TextPresent(text="Member Search")],
-    )
     balance = member_balance_capability()
 
     return Capability(

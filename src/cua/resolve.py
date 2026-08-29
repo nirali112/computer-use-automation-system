@@ -200,7 +200,7 @@ def extract_value(observation: Observation, extraction, pattern: str | None = No
 
     if isinstance(extraction, ControlText):
         resolution = resolve_target(observation, extraction.target)
-        if not resolution.ok:
+        if resolution.control is None:
             raise ExtractionError(resolution.describe_failure(extraction.target))
         raw = resolution.control.value or resolution.control.name
 

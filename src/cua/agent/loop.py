@@ -220,19 +220,25 @@ class DiscoveryAgent:
                 run.outcome = "timed_out"
                 break
 
-            with self.client.messages.stream(
-                model=self.model,
-                max_tokens=MAX_TOKENS,
-                system=[{"type": "text", "text": SYSTEM,
-                         # The system prompt and tool list are identical on every
-                         # turn, so they are cached; only the growing transcript
-                         # is charged at full price.
-                         "cache_control": {"type": "ephemeral"}}],
-                tools=tools,
-                thinking={"type": "adaptive"},
-                output_config={"effort": self.effort},
-                messages=messages,
-            ) as stream:
+            # Assembled as one mapping rather than passed inline, because the
+            # SDK types these parameters as unions of many TypedDicts. The
+            # shapes are correct at runtime -- two committed discovery runs
+            # exercise them -- and restating the SDK's schema here to satisfy a
+            # type checker would be duplication, not safety.
+            request: dict[str, Any] = {
+                "model": self.model,
+                "max_tokens": MAX_TOKENS,
+                # The system prompt and tool list are identical on every turn,
+                # so they are cached; only the growing transcript is charged at
+                # full price.
+                "system": [{"type": "text", "text": SYSTEM,
+                            "cache_control": {"type": "ephemeral"}}],
+                "tools": tools,
+                "thinking": {"type": "adaptive"},
+                "output_config": {"effort": self.effort},
+                "messages": messages,
+            }
+            with self.client.messages.stream(**request) as stream:
                 response = stream.get_final_message()
 
             run.input_tokens += response.usage.input_tokens
@@ -255,7 +261,7 @@ class DiscoveryAgent:
                     stop = True
                     break
                 if call.name == "give_up":
-                    run.give_up_reason = call.input.get("reason", "")
+                    run.give_up_reason = str(dict(call.input).get("reason", ""))
                     run.outcome = "gave_up"
                     stop = True
                     break

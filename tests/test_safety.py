@@ -6,7 +6,6 @@ shows up as an action nobody sanctioned. Redaction is about what survives in
 writing, and a gap in it shows up months later in a log nobody thought about.
 """
 
-import pytest
 
 from cua.artifact import (
     Capability,
@@ -14,18 +13,15 @@ from cua.artifact import (
     Click,
     Navigate,
     Provenance,
-    RoleName,
     Step,
     Surface as SurfaceSpec,
-    Target,
     TextPresent,
 )
 from cua.evidence import Recorder
 from cua.replay import FailureKind, ReplayEngine, Status
 from cua.safety import Policy, REDACTED, Redactor
-from cua.surfaces.base import Control, FrameView, Observation
 
-from test_replay_taxonomy import ScriptedSurface, button, by_name, screen
+from test_replay_taxonomy import ScriptedSurface, by_name, screen
 
 
 def capability(**overrides) -> Capability:

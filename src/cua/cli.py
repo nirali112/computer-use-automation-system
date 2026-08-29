@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 from .artifact import catalog as read_catalog, load_latest, save
 from .escalation import InterventionQueue, QueueEscalator, RecordOnlyEscalator
 from .evidence import Recorder
-from .replay import ReplayEngine, Status
+from .replay import ReplayEngine
 from .safety import Policy
 
 DEFAULT_POLICY = "policy.yaml"

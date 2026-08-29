@@ -29,7 +29,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from ..safety.redact import REDACTED, Redactor
+from ..safety.redact import Redactor
 
 DEFAULT_ROOT = Path("evidence/runs")
 
@@ -131,6 +131,6 @@ class Recorder:
 
     def write_result(self, result: Any) -> Path:
         path = self.directory / "result.json"
-        payload = asdict(result) if is_dataclass(result) else dict(result)
+        payload = asdict(result) if is_dataclass(result) and not isinstance(result, type) else dict(result)
         path.write_text(json.dumps(self._scrub(payload), indent=2, default=str) + "\n")
         return path

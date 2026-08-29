@@ -157,10 +157,16 @@ are already recorded and committed under `capabilities/`, so the replay,
 escalation, guardrail and evidence paths can all be exercised offline.
 
 ```bash
-pytest                 # 140 tests, no key required
+pytest
+ruff check .
+mypy
 ```
 
-The suite starts its own copy of the mock console and its own browser.
+145 tests, no key required; the suite starts its own copy of the mock console
+and its own browser. The type check and the linter are both clean, and both
+found real defects when first run — a list inferred from its first element
+could not have held the fallback targeting strategy, and an autofixed import
+turned out to be a re-export in use.
 
 ## Seeing the handoff yourself
 

@@ -7,7 +7,6 @@ between "the application answered" and "the automation broke" survives contact
 with framesets, redirects, sessions and unlabelled forms.
 """
 
-import json
 
 import pytest
 

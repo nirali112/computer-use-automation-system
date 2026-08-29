@@ -34,7 +34,6 @@ from __future__ import annotations
 
 import re
 import time
-import uuid
 from dataclasses import dataclass
 from typing import Any
 
@@ -51,7 +50,7 @@ from ..artifact.conditions import Condition
 from ..artifact.steps import Click, Navigate, ParamValue, SelectOption, Step, TypeText, WaitFor
 from ..evidence.recorder import Recorder
 from ..resolve import ExtractionError, cast_value, evaluate_condition, extract_value, resolve_target
-from ..escalation.broker import Escalator, Handback, Intervention
+from ..escalation.broker import Escalator, Intervention
 from ..escalation.control import ControlledSurface, SessionControl, describe_change
 from ..safety.policy import Policy
 from ..surfaces.base import Observation, Surface
@@ -91,13 +90,32 @@ class _Blocked(Exception):
 
 @dataclass
 class _Settled:
-    """How a wait ended."""
+    """How a wait ended.
+
+    `reason` and the payload fields are correlated: a settle with reason
+    "outcome" always carries an outcome. The `require_*` accessors state that
+    invariant in one place rather than leaving every call site to assume it,
+    and turn a violation into a clear assertion instead of an AttributeError
+    several frames away.
+    """
 
     reason: str  # "expected" | "outcome" | "recovery" | "app_failure" | "timeout"
     observation: Observation
     outcome: BusinessOutcome | None = None
     recovery: Recovery | None = None
     signal: FailureSignal | None = None
+
+    def require_outcome(self) -> BusinessOutcome:
+        assert self.outcome is not None, "settled on an outcome without one"
+        return self.outcome
+
+    def require_recovery(self) -> Recovery:
+        assert self.recovery is not None, "settled on a recovery without one"
+        return self.recovery
+
+    def require_signal(self) -> FailureSignal:
+        assert self.signal is not None, "settled on an application failure without a signal"
+        return self.signal
 
 
 class ReplayEngine:
@@ -453,11 +471,11 @@ class ReplayEngine:
                     if not skip_preflight:
                         pre = self._look(capability, step.index, expect=None)
                         if pre.reason == "app_failure":
-                            raise _Blocked(self._application_failure(step, pre.signal))
+                            raise _Blocked(self._application_failure(step, pre.require_signal()))
                         if pre.reason == "outcome":
-                            return self._business(finish, pre.outcome, step.index)
+                            return self._business(finish, pre.require_outcome(), step.index)
                         if pre.reason == "recovery":
-                            jump = self._recover(capability, pre.recovery, step, attempts,
+                            jump = self._recover(capability, pre.require_recovery(), step, attempts,
                                                  executed_irreversible)
                             if jump is not None:
                                 pointer, skip_preflight = jump, True
@@ -490,18 +508,22 @@ class ReplayEngine:
                     while True:
                         settled = self._wait(capability, step.index, step.expect, self.step_timeout_ms)
                         if settled.reason == "app_failure":
-                            raise _Blocked(self._application_failure(step, settled.signal))
+                            raise _Blocked(self._application_failure(step, settled.require_signal()))
                         if settled.reason == "outcome":
-                            return self._business(finish, settled.outcome, step.index)
+                            return self._business(finish, settled.require_outcome(), step.index)
                         if settled.reason == "recovery":
-                            jump = self._recover(capability, settled.recovery, step, attempts,
+                            jump = self._recover(capability, settled.require_recovery(), step, attempts,
                                                  executed_irreversible)
                             if jump is not None:
                                 pointer, skip_preflight, jumped = jump, True, True
                                 break
                             continue
                         if settled.reason == "timeout":
-                            raise _Blocked(self._checkpoint_failure(step, step.expect, settled.observation))
+                            # A step with no expectation settles immediately, so
+                            # a timeout can only mean there was one.
+                            assert step.expect is not None
+                            raise _Blocked(
+                                self._checkpoint_failure(step, step.expect, settled.observation))
                         break
 
                     if jumped:
@@ -527,9 +549,9 @@ class ReplayEngine:
             final = self._wait(capability, len(capability.steps), capability.checkpoint,
                                self.step_timeout_ms)
             if final.reason == "app_failure":
-                raise _Blocked(self._application_failure(capability.steps[-1], final.signal))
+                raise _Blocked(self._application_failure(capability.steps[-1], final.require_signal()))
             if final.reason == "outcome":
-                return self._business(finish, final.outcome, len(capability.steps))
+                return self._business(finish, final.require_outcome(), len(capability.steps))
             if final.reason != "expected":
                 raise _Blocked(Failure(
                     kind=FailureKind.CHECKPOINT_FAILED,

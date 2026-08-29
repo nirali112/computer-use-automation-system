@@ -15,7 +15,6 @@ from pydantic import ValidationError
 from cua.artifact import (
     Capability,
     Checkpoint,
-    LiteralValue,
     Navigate,
     Parameter,
     ParamValue,

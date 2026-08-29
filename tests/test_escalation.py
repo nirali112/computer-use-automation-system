@@ -32,7 +32,7 @@ from test_replay_taxonomy import (
     capability,
     screen,
 )
-from cua.artifact import Click, Navigate, Step
+from cua.artifact import Click, Step
 
 OPEN = Policy(allowed_origins=["http://x"], allowed_paths=["*"])
 

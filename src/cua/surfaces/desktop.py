@@ -45,6 +45,8 @@ Three things genuinely differ, and pretending otherwise would be the mistake:
 
 from __future__ import annotations
 
+from typing import NoReturn
+
 from .base import Control, Observation, Surface
 
 
@@ -74,7 +76,7 @@ class DesktopSurface(Surface):
                     "platform tree instead of the accessibility tree.",
     }
 
-    def _unimplemented(self, method: str):
+    def _unimplemented(self, method: str) -> NoReturn:
         raise NotImplementedError(
             f"DesktopSurface.{method} is a documented stub. It would be implemented as: "
             f"{self.PLATFORM_NOTES[method]}"

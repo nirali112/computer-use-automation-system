@@ -44,8 +44,17 @@ from ..artifact.capability import (
     TableCell,
 )
 from ..artifact.conditions import Checkpoint, TextPresent
-from ..artifact.steps import Click, LiteralValue, Navigate, ParamValue, SelectOption, Step, TypeText
-from ..artifact.targeting import CellAdjacent, Ordinal, RoleName, Target
+from ..artifact.steps import (
+    Action,
+    Click,
+    LiteralValue,
+    Navigate,
+    ParamValue,
+    SelectOption,
+    Step,
+    TypeText,
+)
+from ..artifact.targeting import CellAdjacent, Ordinal, RoleName, Strategy, Target
 from ..resolve import resolve_target
 from ..surfaces.base import Control, Observation
 from .loop import DiscoveryRun, RecordedAction
@@ -68,9 +77,12 @@ class InputSpec:
     pattern: str | None = None
 
 
-def _strategies_for(control: Control, observation: Observation | None):
+def _strategies_for(control: Control, observation: Observation | None) -> list[Strategy]:
     """Derive targeting from what the control reported, strongest first."""
-    candidates = []
+    # Annotated, because inference from the first append would type this as a
+    # list of RoleName and quietly exclude the adjacent-cell fallback -- which
+    # is the strategy the whole design depends on being able to add.
+    candidates: list[Strategy] = []
 
     if control.name:
         candidates.append(RoleName(
@@ -119,7 +131,7 @@ def _strategies_for(control: Control, observation: Observation | None):
     def verifies(strategy) -> bool:
         probe = Target(description="probe", frame=control.frame, strategies=[strategy])
         resolution = resolve_target(observation, probe)
-        return resolution.ok and resolution.control.handle == control.handle
+        return resolution.control is not None and resolution.control.handle == control.handle
 
     kept = [strategy for strategy in candidates if verifies(strategy)]
     if kept:
@@ -130,6 +142,8 @@ def _strategies_for(control: Control, observation: Observation | None):
 
 def _target_for(action: RecordedAction) -> Target:
     control = action.control
+    if control is None:
+        raise SynthesisError(f"the recorded action {action.why!r} has no control to target")
     strategies = _strategies_for(control, action.observation_before)
     if not strategies:
         raise SynthesisError(
@@ -225,8 +239,11 @@ def synthesise(
 
     steps: list[Step] = []
     for index, action in enumerate(run.actions):
+        # Annotated for the same reason as the strategy list: inference from the
+        # first branch would type this as Navigate and reject every other action.
+        built: Action
         if action.kind == "navigate":
-            built = Navigate(url=action.url)
+            built = Navigate(url=action.url or "")
         elif action.kind == "click":
             built = Click(target=_target_for(action))
         elif action.kind == "type":

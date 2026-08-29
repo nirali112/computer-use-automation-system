@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.3", "pytest-asyncio>=0.24"]
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24", "mypy>=1.11", "ruff>=0.6"]
 
 [project.scripts]
 cua = "cua.cli:main"
@@ -36,6 +36,21 @@ include = ["cua*", "mockbank*"]
 
 [tool.setuptools.package-data]
 mockbank = ["templates/*.html", "static/*.css"]
+
+[tool.mypy]
+# Checked, not aspirational: `mypy src/cua` is clean. Third-party stubs are
+# not required, because the value here is catching our own type errors -- and
+# it did, twice: a list inferred from its first element could not have held
+# the fallback targeting strategy, and an action variable inferred from its
+# first branch could not have held any other action.
+files = ["src/cua"]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["F", "E9"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

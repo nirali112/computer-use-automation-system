@@ -20,7 +20,6 @@ from cua.artifact import (
     Navigate,
     Output,
     Parameter,
-    ParamValue,
     Provenance,
     Reauthenticate,
     Recovery,
@@ -29,12 +28,11 @@ from cua.artifact import (
     Surface as SurfaceSpec,
     Target,
     TextPresent,
-    TypeText,
 )
 from cua.artifact.capability import BusinessOutcome, FailureSignal
 from cua.evidence import Recorder
 from cua.replay import FailureKind, ReplayEngine, Status
-from cua.safety import Policy, permissive_for_testing
+from cua.safety import permissive_for_testing
 from cua.surfaces.base import Control, FrameView, Observation, Table
 
 
@@ -201,7 +199,6 @@ def test_an_ambiguous_target_fails_rather_than_choosing(tmp_path):
 
 
 def test_a_missed_checkpoint_names_the_assertions_that_did_not_hold(tmp_path):
-    surface = ScriptedSurface(screen("Sign On"))
     result = run(ScriptedSurface(screen("Sign On")), capability(), tmp_path=tmp_path)
     assert result.failure.kind is FailureKind.CHECKPOINT_FAILED
     assert "Done" in result.failure.observed

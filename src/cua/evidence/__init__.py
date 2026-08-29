@@ -1,5 +1,6 @@
 """Run evidence: the structured record of what happened and why."""
 
-from .recorder import REDACTED, Recorder
+from ..safety.redact import REDACTED
+from .recorder import Recorder
 
 __all__ = ["Recorder", "REDACTED"]
