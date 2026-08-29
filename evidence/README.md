@@ -79,6 +79,7 @@ screenshot and a snapshot of what the automation could see.
 | `12-escalation-operator-works-the-session` | `success` — a person drove the same session by hand, then handed it back |
 | `13-replay-validation-error` | `business_outcome` — a deposit below the minimum, reported not retried |
 | `14-replay-unexpected-dialog` | `success` — a `confirm()` nobody asked for, dismissed and recorded |
+| `15-agent-invokes-capability` | an agent discovering a capability and calling it by name |
 
 Between them these cover every runtime condition the brief names in §3.3: a
 validation error (13), a "record not found" result (06), a permission denial

@@ -400,12 +400,21 @@ class Capability(BaseModel):
 
     # -- the agent-facing contract -----------------------------------------
 
-    def input_schema(self) -> dict[str, Any]:
-        """JSON Schema for the arguments a caller supplies."""
+    def input_schema(self, *, include_sensitive: bool = True) -> dict[str, Any]:
+        """JSON Schema for the arguments a caller supplies.
+
+        `include_sensitive=False` produces the schema an *agent* is shown.
+        A model must never be asked to supply a credential: it would have to
+        be given one to put in the argument, which puts a password into a
+        prompt, a transcript and a log. Sensitive parameters are supplied by
+        the infrastructure that runs the capability, from its own configured
+        secrets, and the agent chooses only the business arguments.
+        """
+        shown = [p for p in self.parameters if include_sensitive or not p.sensitive]
         return {
             "type": "object",
-            "properties": {p.name: p.json_schema() for p in self.parameters},
-            "required": [p.name for p in self.parameters if p.required],
+            "properties": {p.name: p.json_schema() for p in shown},
+            "required": [p.name for p in shown if p.required],
             "additionalProperties": False,
         }
 
@@ -431,7 +440,13 @@ class Capability(BaseModel):
         description = self.description
         if outcomes:
             description += f"\n\nMay return these business outcomes instead of success:{outcomes}"
-        return {"name": self.id, "description": description, "input_schema": self.input_schema()}
+        return {
+            "name": self.id,
+            "description": description,
+            # The agent-facing schema, so credentials are never among the
+            # arguments a model is asked to produce.
+            "input_schema": self.input_schema(include_sensitive=False),
+        }
 
     def sensitive_parameters(self) -> set[str]:
         return {p.name for p in self.parameters if p.sensitive}

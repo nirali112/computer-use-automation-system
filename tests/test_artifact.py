@@ -198,3 +198,16 @@ def test_a_sensitive_parameter_may_not_carry_an_example():
     with pytest.raises(ValidationError, match="must not carry an example"):
         Parameter(name="password", type="string", description="d",
                   sensitive=True, example="Passw0rd!")
+
+
+def test_the_agent_facing_schema_never_asks_for_a_credential():
+    """A model asked for a password would have to be given one to put in the
+    argument, which puts it in a prompt, a transcript and a log. Sensitive
+    parameters are supplied by the infrastructure that runs the capability."""
+    capability = member_balance_capability()
+    agent_facing = capability.as_tool_definition()["input_schema"]
+    assert agent_facing["required"] == ["member_id"]
+    assert "operator_password" not in agent_facing["properties"]
+
+    # The full contract still describes them, because the runner needs to know.
+    assert "operator_password" in capability.input_schema()["properties"]

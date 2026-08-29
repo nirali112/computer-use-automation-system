@@ -144,9 +144,25 @@ and a human authorising an irreversible step on the live session. Writes
 ### 6. What an agent would be handed
 
 ```bash
-cua catalog            # human-readable
-cua catalog --tools    # as callable tool definitions, with typed arguments
+cua catalog
+cua catalog --tools
 ```
+
+And an agent actually using it — asked a question in English, it reads the
+catalog, calls a capability by name with typed arguments, and answers:
+
+```bash
+python scripts/agent_invokes_capability.py "What is the savings balance for member 100234?"
+```
+
+```
+catalog: 2 approved capabilities
+  agent invoked member_savings_balance({"member_id": "100234"})
+    -> success: returned 3 output(s)
+```
+
+The credentials are deliberately absent from the schema the agent is shown. A
+model asked for a password would have to be handed one to put in the argument.
 
 ---
 

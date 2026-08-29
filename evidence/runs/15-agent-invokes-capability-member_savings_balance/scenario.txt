@@ -1,0 +1,52 @@
+15-agent-invokes-capability
+
+An AI agent discovering a capability from the catalog and invoking it by name
+with typed arguments. Reproduce with:
+
+    python scripts/agent_invokes_capability.py "What is the current savings
+        balance for member 100234?"
+
+Two models appear in this demonstration and they do different jobs. The one
+running here is a caller: it is asked a question in English, reads the catalog,
+and picks a capability with typed arguments. It never sees the application and
+never chooses a control. The model that recorded the capability is not running
+at all -- that work was done once, and is frozen in the artifact.
+
+The agent is not offered the operator credentials. A model asked for a password
+would have to be given one to put in the argument, which puts it in a prompt, a
+transcript and a log. The runner supplies them from its own configuration.
+
+--- transcript, success -------------------------------------------------------
+
+catalog: 2 approved capabilities -- member_savings_balance, open_member_subaccount
+question: What is the current savings balance for member 100234?
+
+  agent invoked member_savings_balance({"member_id": "100234"})
+    -> success: returned 3 output(s)
+
+agent's answer:
+  Member 100234 is <redacted>. Their savings account (SAV-100234-01) has a
+  current balance of $4,182.55.
+
+  The name is redacted here and not in the agent's actual reply. The caller
+  asked for it and receives it; this file is evidence, which is kept, copied
+  and read by people with no business seeing it. That is the same rule the
+  recorder applies automatically, applied by hand to a transcript written by
+  hand.
+
+--- transcript, business outcome -----------------------------------------------
+
+question: Can you look up the savings balance for member 999999?
+
+  agent invoked member_savings_balance({"member_id": "999999"})
+    -> business_outcome: MEMBER_NOT_FOUND
+
+agent's answer:
+  No member exists with ID 999999, so there's no savings balance to report.
+  It's worth double-checking the number on the statement -- if you have a
+  corrected ID, I'm happy to look it up.
+
+The second transcript is the one worth reading. The agent was told, through the
+tool description, that MEMBER_NOT_FOUND is an answer it may receive. It relayed
+it as an answer rather than retrying or reporting a fault, which is what
+declaring business outcomes in the artifact was for.

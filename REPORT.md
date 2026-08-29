@@ -22,10 +22,13 @@ Two capabilities were recorded by `claude-opus-5` against a mock core banking co
 | restricted member | `BUSINESS_OUTCOME` · `SERVICING_NOT_PERMITTED` |
 | deposit below the minimum | `BUSINESS_OUTCOME` · `DEPOSIT_REJECTED` |
 | unexpected `confirm()` dialog | dismissed, recorded, `SUCCESS` |
+| an agent invoking a capability by name | picked the tool, supplied typed args, answered in English |
 
 142 tests. Replay, escalation and the guardrails run with no API key and no network.
 
 Those rows cover every runtime condition §3.3 names: a validation error, a "record not found" result, a permission denial, an unexpected dialog, a session timeout, and a failed load.
+
+The last row is the through-line closing. An agent is asked a question in English, reads the catalog, and invokes `member_savings_balance(member_id="100234")`. It never sees the application. Asked about a member who does not exist, it relays `MEMBER_NOT_FOUND` as an answer rather than retrying, because the tool description told it that was a possible result. The credentials are not in the schema it was shown: a model asked for a password would have to be handed one to put in the argument.
 
 Each of those replays also returns the member's name. It does not appear in the table, or in any evidence file, because it is declared a sensitive output: returned to the caller who asked for it, withheld from a log that outlives the request.
 
@@ -202,6 +205,8 @@ Three limits: pattern redaction recognises shapes, not meanings, so it will neve
 - **Operator console.** A CLI, not co-browsing. The control transfer it drives is real.
 - **Outcome discovery.** Business outcomes, recovery and risk classification are added at review, because a run that succeeds cannot observe what happens otherwise. Runs 05 and 06 in `evidence/` show the difference this makes.
 - **Concurrency, queues, persistence.** Production moves artifacts into object storage behind the same `store.py`, and the queue behind the same interface. Neither changes anything above them, which is why they are interfaces now and nothing more.
+
+One stretch goal is taken, and only one: the agent-facing capability interface, with an agent shown invoking a capability by name. The approval gate is not counted as a second, because it belongs to the safety model in §6 rather than being extra. Scoring artifacts by replay reliability, code generation, assisted fallback and cross-tenant canonicalisation are all untouched.
 
 Next: probe runs that deliberately provoke each error path and record its signature; stable step keys and the override resolver; a per-tenant canary schedule; a second surface, because the seam is argued until something else satisfies it.
 
